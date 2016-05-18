@@ -1,17 +1,7 @@
-// TODO Enter config as JSON
 // TODO Maybe merge general and rules
 // TODO Use immediate object initialization pattern
 // Full config
-TRIPLET.config = (function() {
-
-  var random = TRIPLET.utilities.random;
-
-  function Randomizer(type, arg) {
-    if (type in random) return random[type].bind(null, arg);
-    else throw new Error('Wrong type of random function: ' + type);
-  }
-
-  var config = {
+TRIPLET.config = ({
 
     general: {
       rows: 5, columns: 5, defaultRowsCols: 3, size: 420,
@@ -23,33 +13,24 @@ TRIPLET.config = (function() {
     },
 
     players: [
-      { name: 'Ann', ai: 'hard', signID: 0, color: 'ff0000' },
-      { name: 'Bob', ai: 'none', signID: 1, color: '0000ff' }
+      { name: 'Ann', ai: 'hard', signID: 'x', color: 'ff0000' },
+      { name: 'Bob', ai: 'none', signID: 'o', color: '0000ff' }
     ],
 
     element: {
       line: {
-        random: Object.defineProperties({}, {
-          'imgID': { get: Randomizer('item', [0, 1, 2, 3]) },
-          'move': { get: Randomizer('error', 8) },
-          'rotate': { get: Randomizer('error', 0.1) },
-          'scale': { get: Randomizer('error', 0.1) }
-        }),
+        random: {
+          imgID: [0, 1, 2, 3],
+          move: 8, rotate: 0.1, scale: 0.1
+        },
         frames: { inRow: 1, total: 6, delay: 25 },
         pause: 40
       },
       sign: {
-        random: Object.defineProperties({}, {
-          'imgID': {
-            value: Object.defineProperties([], {
-              '0': { get: Randomizer('item', [4]) },
-              '1': { get: Randomizer('item', [5]) }
-            })
-          },
-          'move': { get: Randomizer('error', 8) },
-          'rotate': { get: Randomizer('error', 0.1) },
-          'scale': { get: Randomizer('error', 0.1) }
-        }),
+        random: {
+          imgID: { x: [4], o: [5] },
+          move: 8, rotate: 0.1, scale: 0.1
+        },
         frames: { inRow: 1, total: 1, delay: 0 },
         pause: 200
       }
@@ -87,19 +68,47 @@ TRIPLET.config = (function() {
           sign: { own: 5, enemy: 5, mainEnemy: 5 }, win: 100, tie: 10
         }, depth: 0, infelicity: 30
       }
+    },
+
+    init: function() {
+
+      var random = TRIPLET.utilities.random;
+
+      function Randomizer(arg) {
+        if (typeof arg === 'number') return random.error.bind(null, arg);
+        if (Array.isArray(arg)) return random.item.bind(null, arg);
+        else throw new TypeError('No Randomizer for this argument: ' + arg);
+      }
+
+      function makeRandomizers(obj, randomize) {
+        for (var prop in obj) {
+          if (typeof obj.prop === 'object' && !Array.isArray(obj.prop)) {
+            makeRandomizers(obj.prop, randomize || prop === 'random');
+          } else if (randomize) {
+            Object.defineProperty(obj, prop, {
+              enumerable: true,
+              get: Randomizer(obj.prop),
+              set: Randomizer
+            });
+          }
+        }
+        delete obj.randomize;
+      }
+
+      makeRandomizers(this);
+
+      (function(cfg) {
+        cfg.maxLineLength = Math.min(cfg.rows, cfg.columns);
+        cfg.maxTurns = cfg.rows * cfg.columns;
+      })(this.general);
+
+      (function(cfg) {
+        cfg.turnsPerRound = config.players.length * cfg.signsPerRound;
+      })(this.rules);
+
+      delete this.init;
+      return this;
+
     }
 
-  };
-
-  (function(cfg) {
-    cfg.maxLineLength = Math.min(cfg.rows, cfg.columns);
-    cfg.maxTurns = cfg.rows * cfg.columns;
-  })(config.general);
-
-  (function(cfg) {
-    cfg.turnsPerRound = config.players.length * cfg.signsPerRound;
-  })(config.rules);
-
-  return config;
-
-})();
+  }).init();
