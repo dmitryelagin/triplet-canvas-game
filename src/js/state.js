@@ -111,9 +111,10 @@ State.prototype = {
 
       function getInlineCells(lim, dirX, dirY, counter) {
         var row = moveRow + dirX * counter,
-            col = moveCol + dirY * counter;
+            col = moveCol + dirY * counter,
+            i;
         if (this.cellInRange(row, col))
-          for (var i = 0; i < codes.length; i++)
+          for (i = 0; i < codes.length; i++)
             if (this.field[row][col] === codes[i] && lim[i] && lim[i]-- > 0)
               return getInlineCells.call(this, lim, dirX, dirY, counter + 1);
         return counter;
