@@ -1,6 +1,6 @@
 // TODO Enter config as JSON
 // TODO Maybe merge general and rules
-// TODO Use immediate object initialization pattern here
+// TODO Use immediate object initialization pattern
 // Full config
 TRIPLET.config = (function() {
 
