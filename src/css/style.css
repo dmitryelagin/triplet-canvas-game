@@ -1,16 +1,14 @@
 body {
-  background-color: #fff;
+  background-color: #fff; 
   background-image: linear-gradient(#e0e0ff 2px, transparent 2px);
   background-size: 100% 36px;
 }
 
 .field-border {
-  border-right: 3px solid;
-  border-right-color: rgb(160, 80, 80);
-  border-right-color: rgba(255, 0, 0, 0.3);
+  border-right: 3px solid rgba(255, 0, 0, 0.3);
   position: fixed;
   z-index: 5;
-  left: 108px;
+  width: 108px;
   height: 100%;
 }
 

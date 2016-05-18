@@ -1,4 +1,3 @@
-// TODO Throw exeption if there is no signID
 // Player constructor
 TRIPLET.Player = (function() {
 
@@ -10,7 +9,7 @@ var cfg = TRIPLET.config.general,
 Player = function(setup, index) {
   if (!(this instanceof Player)) return new Player(setup, index);
   this.queue = parseInt(index, 10);
-  this.signID = setup.signID;
+  this.signID = parseInt(setup.signID, 10);
   this.name = setup.name || 'Player';
   this.color = setup.color || '000000';
   this.ai = ai[setup.ai] || ai.none;
