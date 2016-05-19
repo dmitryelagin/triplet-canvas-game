@@ -1,5 +1,6 @@
 // TODO Try to add depth for only win search
 // TODO Maybe add players externally
+// TODO Maybe REFACTOR too many .call() in .findWin()
 // Game state class
 TRIPLET.State = (function() {
 
@@ -100,7 +101,6 @@ State.prototype = {
 
   })(),
 
-  // REFACTOR too many .call()
   // Find win or tie methods
   findWin: (function() {
 

@@ -1,5 +1,4 @@
 // TODO Maybe merge general and rules
-// TODO Use immediate object initialization pattern
 // Full config
 TRIPLET.config = ({
 
