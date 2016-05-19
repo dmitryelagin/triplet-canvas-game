@@ -9,12 +9,11 @@ TRIPLET.Picture = (function() {
       Sprite = TRIPLET.Sprite,
       Picture;
 
-  Picture = function(canvas, field, control) {
+  Picture = function(field, canvas) {
+    this.field = field;
     this.canvas = canvas;
     this.context = this.canvas.getContext('2d');
-    this.field = field;
     this.sprites = [];
-    this.canvas.addEventListener('click', control.onClick);
   };
 
   Picture.prototype = {

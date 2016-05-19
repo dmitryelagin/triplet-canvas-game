@@ -15,7 +15,7 @@ Field = function() {
   this.cell = { width: cellSize, height: cellSize };
   this.canvas = {
     width: cfg.left + this.width + cfg.right,
-    height: cft.top + this.height + cfg.bottom
+    height: cfg.top + this.height + cfg.bottom
   };
 
   this.lines = (function(self) {
@@ -41,11 +41,11 @@ Field = function() {
 
     return {
       hor: linesFactory(cfg.rows, function(index) {
-        lineDefaults.hor.y = top + self.cell.height * index;
+        lineDefaults.hor.y = cfg.top + self.cell.height * index;
         return lineDefaults.hor;
       }),
       ver: linesFactory(cfg.columns, function(index) {
-        lineDefaults.ver.x = left + self.cell.width * index;
+        lineDefaults.ver.x = cfg.left + self.cell.width * index;
         return lineDefaults.ver;
       })
     };

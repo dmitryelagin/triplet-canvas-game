@@ -99,9 +99,9 @@ TRIPLET.config = ({
         cfg.maxTurns = cfg.rows * cfg.columns;
       })(this.general);
 
-      (function(cfg) {
-        cfg.turnsPerRound = config.players.length * cfg.signsPerRound;
-      })(this.rules);
+      (function(self, rule) {
+        rule.turnsPerRound = self.players.length * rule.signsPerRound;
+      })(this, this.rules);
 
       delete this.init;
       return this;
