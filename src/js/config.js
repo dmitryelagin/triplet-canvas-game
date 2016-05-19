@@ -81,7 +81,7 @@ TRIPLET.config = ({
       }
 
       function makeRandomizers(obj, randomize) {
-        for (var prop in obj) {
+        for (var prop in obj)
           if (typeof obj.prop === 'object' && !Array.isArray(obj.prop)) {
             makeRandomizers(obj.prop, randomize || prop === 'random');
           } else if (randomize) {
@@ -91,8 +91,6 @@ TRIPLET.config = ({
               set: Randomizer
             });
           }
-        }
-        delete obj.randomize;
       }
 
       makeRandomizers(this);
