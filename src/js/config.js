@@ -74,14 +74,18 @@ TRIPLET.config = ({
       var random = TRIPLET.utilities.random;
 
       function makeRandomizers(obj) {
-        for (var prop in obj)
+        var prop;
+        function remakeObj(property, val) {
+          Object.defineProperty(obj, property, {
+            enumerable: true,
+            get: random.makeRandomizer(val),
+            set: remakeObj.bind(null, property)
+          });
+        }
+        for (prop in obj)
           if (typeof obj.prop === 'object' && !Array.isArray(obj.prop))
             makeRandomizers(obj.prop);
-          else Object.defineProperty(obj, prop, {
-            enumerable: true,
-            get: random.makeRandomizer(obj.prop),
-            set: random.makeRandomizer
-          });
+          else remakeObj(prop, obj.prop);
       }
 
       (function(elem) {
