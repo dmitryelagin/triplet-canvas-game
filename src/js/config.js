@@ -73,26 +73,21 @@ TRIPLET.config = ({
 
       var random = TRIPLET.utilities.random;
 
-      function Randomizer(arg) {
-        if (typeof arg === 'number') return random.error.bind(null, arg);
-        if (Array.isArray(arg)) return random.item.bind(null, arg);
-        else throw new TypeError('No Randomizer for this argument: ' + arg);
-      }
-
-      function makeRandomizers(obj, randomize) {
+      function makeRandomizers(obj) {
         for (var prop in obj)
-          if (typeof obj.prop === 'object' && !Array.isArray(obj.prop)) {
-            makeRandomizers(obj.prop, randomize || prop === 'random');
-          } else if (randomize) {
-            Object.defineProperty(obj, prop, {
-              enumerable: true,
-              get: Randomizer(obj.prop),
-              set: Randomizer
-            });
-          }
+          if (typeof obj.prop === 'object' && !Array.isArray(obj.prop))
+            makeRandomizers(obj.prop);
+          else Object.defineProperty(obj, prop, {
+            enumerable: true,
+            get: random.makeRandomizer(obj.prop),
+            set: random.makeRandomizer
+          });
       }
 
-      makeRandomizers(this);
+      (function(elem) {
+        makeRandomizers(elem.line.random);
+        makeRandomizers(elem.sign.random);
+      })(this.element);
 
       (function(cfg) {
         cfg.maxLineLength = Math.min(cfg.rows, cfg.columns);
