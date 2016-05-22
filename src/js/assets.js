@@ -10,11 +10,11 @@ var Storage = function(loader) {
 
 Storage.prototype = {
 
-  constructor: TRIPLET.assets.Storage,
+  constructor: Storage,
 
   load: function(loadList, callback) {
     function onEnd(save, value) {
-      save(value);
+      save.call(this, value);
       if (++this.finished >= loadList.length) callback();
     }
     loadList.forEach(function(link, index) {
@@ -25,14 +25,13 @@ Storage.prototype = {
         this.errors[index] = info;
       }
       this.loader(link, onEnd.bind(this, onLoad), onEnd.bind(this, onError));
-    });
+    }, this);
     this.load = typeof callback === 'function' ? callback : function() {};
   }
 
 };
 
 return {
-  Storage: Storage,
   images: new Storage(function(link, onSuccess, onFail) {
     var img = new Image();
     img.src = link;

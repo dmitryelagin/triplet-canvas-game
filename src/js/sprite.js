@@ -9,12 +9,14 @@ var cfg = TRIPLET.config.general,
 
 Sprite = function(setup) {
 
-  var ratio = Math.max(setup.container.width, setup.container.height) /
-    Math.max(setup.image.width, setup.image.height) || 1;
+  var ratio;
 
   this.image = (function(img) {
     return img;
   })(images[setup.imgID]);
+
+  ratio = Math.max(setup.container.width, setup.container.height) /
+      Math.max(this.image.width, this.image.height) || 1;
 
   this.angle = parseFloat(setup.angle) || 0;
   this.center = uobj.propFromTo(setup.center, { x: 0, y: 0 });
