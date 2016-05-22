@@ -1,3 +1,4 @@
+// TODO Remove this.canvas if not needed
 // Field constructor
 TRIPLET.Field = (function() {
 
@@ -20,11 +21,6 @@ Field = function() {
 
   this.lines = (function(self) {
 
-    var lineDefaults = {
-          hor: { x: cfg.left + self.width / 2, angle: 0 },
-          ver: { y: cfg.top + self.height / 2, angle: Math.PI / 2 }
-        };
-
     function linesFactory(count, getCfg) {
       var i, lineCfg, storage = [];
       for (i = 0; i <= count; i++) {
@@ -41,12 +37,18 @@ Field = function() {
 
     return {
       hor: linesFactory(cfg.rows, function(index) {
-        lineDefaults.hor.y = cfg.top + self.cell.height * index;
-        return lineDefaults.hor;
+        return {
+          x: cfg.left + self.width / 2,
+          y: cfg.top + self.cell.height * index,
+          angle: 0
+        };
       }),
       ver: linesFactory(cfg.columns, function(index) {
-        lineDefaults.ver.x = cfg.left + self.cell.width * index;
-        return lineDefaults.ver;
+        return {
+          x: cfg.left + self.cell.width * index,
+          y: cfg.top + self.height / 2,
+          angle: Math.PI / 2
+        };
       })
     };
 

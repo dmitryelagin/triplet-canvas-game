@@ -66,9 +66,9 @@ TRIPLET.Picture = (function() {
           center: { x: line.x, y: line.y },
           angle: line.angle,
           scale: {
-            width: random.sign() * cfg.defaultRowsCols / cfg.columns +
-              elem.line.random.scale,
-            height: random.sign() + elem.line.random.scale
+            width: random.sign() + elem.line.random.scale,
+            height: random.sign() * cfg.defaultRowsCols / cfg.columns +
+                elem.line.random.scale
           }
         }));
       }

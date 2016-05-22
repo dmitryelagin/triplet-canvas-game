@@ -22,8 +22,8 @@ Game = function(id) {
       this.field,
       html.makeCanvas(
           'triplet-' + id,
-          this.field.width,
-          this.field.height,
+          cfg.general.left + cfg.general.right + this.field.width,
+          cfg.general.top + cfg.general.bottom + this.field.height,
           document.getElementsByTagName('body')[0]));
 
   assets.images.load(cfg.assets.images, function() {

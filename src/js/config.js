@@ -20,10 +20,10 @@ TRIPLET.config = ({
       line: {
         random: {
           imgID: [0, 1, 2, 3],
-          move: 8, rotate: 0.1, scale: 0.1
+          move: 10, rotate: 0.08, scale: 0.08
         },
-        frames: { inRow: 1, total: 6, delay: 25 },
-        pause: 40
+        frames: { inRow: 1, total: 6, delay: 30 },
+        pause: 150
       },
       sign: {
         random: {
@@ -37,10 +37,10 @@ TRIPLET.config = ({
 
     assets: {
       images: [
-        'https://dl.dropboxusercontent.com/s/wzy9flotdl1ba74/line_0an.png',
-        'https://dl.dropboxusercontent.com/s/gfe69iq6uwi4m4j/line_1an.png',
-        'https://dl.dropboxusercontent.com/s/2m2w25o8l9hqguv/line_2an.png',
-        'https://dl.dropboxusercontent.com/s/gzkhrchd9vmfcqk/line_3an.png',
+        'https://dl.dropboxusercontent.com/s/9j33g7cq3ko49e7/line-0.png',
+        'https://dl.dropboxusercontent.com/s/647ml661puehig7/line-1.png',
+        'https://dl.dropboxusercontent.com/s/w56bvchfez107vg/line-2.png',
+        'https://dl.dropboxusercontent.com/s/wjfbvbevopp4fx1/line-3.png',
         'https://dl.dropboxusercontent.com/s/wecnycckk5c3rij/signx_0.png',
         'https://dl.dropboxusercontent.com/s/jfzgiqfaxe8q9al/signo_0.png'
       ]
