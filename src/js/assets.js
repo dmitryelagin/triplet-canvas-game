@@ -35,8 +35,8 @@ return {
   images: new Storage(function(link, onSuccess, onFail) {
     var img = new Image();
     img.src = link;
-    img.onload = onSuccess(img);
-    img.onerror = onFail(link);
+    img.onload = function() { onSuccess(img); };
+    img.onerror = function() { onFail(link); };
   })
 };
 
