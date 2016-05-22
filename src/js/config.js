@@ -83,9 +83,9 @@ TRIPLET.config = ({
           });
         }
         for (prop in obj)
-          if (typeof obj.prop === 'object' && !Array.isArray(obj.prop))
-            makeRandomizers(obj.prop);
-          else remakeObj(prop, obj.prop);
+          if (typeof obj[prop] === 'object' && !Array.isArray(obj[prop]))
+            makeRandomizers(obj[prop]);
+          else remakeObj(prop, obj[prop]);
       }
 
       (function(elem) {

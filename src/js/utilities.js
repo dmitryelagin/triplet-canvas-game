@@ -20,10 +20,12 @@ TRIPLET.utilities = {
       return Math.random() - 0.5 > 0 ? 1 : -1;
     },
 
-    error: function(range) {
-      range = parseFloat(range) || 0;
-      return this.sign() * Math.random() * range;
-    },
+    error: (function() {
+      return (function(anySign, range) {
+        range = parseFloat(range) || 0;
+        return anySign() * Math.random() * range;
+      }).bind(null, this.sign);
+    }),
 
     item: function(array) {
       if (array.hasOwnProperty('length') && array.length > 0)
@@ -31,7 +33,7 @@ TRIPLET.utilities = {
     },
 
     makeRandomizer: function(arg) {
-      if (arg === 'undefined') return this.sign;
+      if (arg === undefined) return this.sign;
       if (typeof arg === 'number') return this.error.bind(null, arg);
       if (Array.isArray(arg)) return this.item.bind(null, arg);
       throw new TypeError('No Randomizer for this argument: ' + arg);
