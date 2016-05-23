@@ -78,7 +78,7 @@ Field.prototype = {
       do {
         ln = lines[i];
         dist = ln.distanceFrom(x, y);
-        dotAfterLine = dist < 0 && ln.angle > 0 || dist >= 0 && ln.angle <= 0;
+        dotAfterLine = dist < 0 && ln.angle > 0 || dist >= 0 && ln.angle <= 0;  // Here is bug
       } while (dotAfterLine && ++i < lines.length);
       return i;
     }

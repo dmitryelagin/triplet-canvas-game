@@ -29,7 +29,7 @@ Line.prototype = {
   distanceFrom: function(x, y) {
     var line = this.getFactors(),
         distance = (line.a * x + line.b * y + line.c) /
-          Math.sqrt(Math.pow(line.a, 2) + Math.pow(line.b, 2));
+            Math.sqrt(Math.pow(line.a, 2) + Math.pow(line.b, 2));
     if (typeof distance === 'number' && !isNaN(distance)) return distance;
     throw new TypeError('Wrong point coordinates: ' + x + ' / ' + y);
   },
