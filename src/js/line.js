@@ -5,6 +5,9 @@ var Line = function(setup) {
   this.x = parseFloat(setup.x) || 0;
   this.y = parseFloat(setup.y) || 0;
   this.angle = parseFloat(setup.angle) || 0;
+  this.a = Math.tan(this.angle);
+  this.b = -1;
+  this.c = this.y - this.a * this.x;
   Object.freeze(this);
 };
 
@@ -17,31 +20,20 @@ Line.prototype = {
 
   constructor: TRIPLET.Line,
 
-  getFactors: function() {
-    var slope = Math.tan(this.angle);
-    return {
-      a: slope,
-      b: -1,
-      c: this.y - slope * this.x
-    };
-  },
-
   distanceFrom: function(x, y) {
-    var line = this.getFactors(),
-        distance = (line.a * x + line.b * y + line.c) /
-            Math.sqrt(Math.pow(line.a, 2) + Math.pow(line.b, 2));
+    var distance = (this.a * x + this.b * y + this.c) /
+        Math.sqrt(Math.pow(this.a, 2) + Math.pow(this.b, 2));
     if (typeof distance === 'number' && !isNaN(distance)) return distance;
     throw new TypeError('Wrong point coordinates: ' + x + ' / ' + y);
   },
 
   intersects: function(line) {
-    var ln0 = this.getFactors(),
-        ln1 = Line.validate(line).getFactors(),
-        divider = ln0.a * ln1.b - ln1.a * ln0.b;
+    Line.validate(line);
+    var divider = this.a * line.b - line.a * this.b;
     if (divider !== 0)
       return {
-        x: -(ln0.c * ln1.b - ln1.c * ln0.b) / divider,
-        y: -(ln0.a * ln1.c - ln1.a * ln0.c) / divider
+        x: -(this.c * line.b - line.c * this.b) / divider,
+        y: -(this.a * line.c - line.a * this.c) / divider
       };
   },
 
