@@ -74,14 +74,23 @@ Field.prototype = {
 
   getCellPosition: function(x, y) {
     function getPosition(lines) {
-      var ln, dist, dotAfterLine, i = 0;
+      var ln, dist, ang, dotAfterLine, i = 0;
       do {
         ln = lines[i];
         dist = ln.distanceFrom(x, y);
-        dotAfterLine = dist < 0 && ln.angle > 0 || dist >= 0 && ln.angle <= 0;  // Here is bug
+        dotAfterLine = dist < 0 && ln.angle > Math.PI / 2 ||
+                       dist >= 0 && ln.angle <= Math.PI / 2;
       } while (dotAfterLine && ++i < lines.length);
       return i;
     }
+    /*
+    function getPosition(lines) {
+      var i = 0;
+      while (lines[i].distanceFrom(x, y) * lines[i].rotate < 0 &&
+             ++i < lines.length) {};
+      return i;
+    }
+    */
     return {
       row: getPosition(this.lines.hor.slice(1, -1)),
       col: getPosition(this.lines.ver.slice(1, -1))

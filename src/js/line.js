@@ -1,17 +1,17 @@
-// Lines constructor, using slope–intercept form
+// Lines constructor, using slope–intercept form for setup
 TRIPLET.Line = (function() {
 
 var Line = function(setup) {
+  this.angle = parseFloat(setup.angle) % (Math.PI * 2) || 0;
   this.x = parseFloat(setup.x) || 0;
   this.y = parseFloat(setup.y) || 0;
-  this.angle = parseFloat(setup.angle) || 0;
   this.a = Math.tan(this.angle);
   this.b = -1;
   this.c = this.y - this.a * this.x;
   Object.freeze(this);
 };
 
-Line.validate = function(line) {
+Line.isLine = function(line) {
   if (line instanceof Line) return line;
   throw new TypeError('Argument is not instance of Line: ' + line);
 };
@@ -28,7 +28,7 @@ Line.prototype = {
   },
 
   intersects: function(line) {
-    Line.validate(line);
+    Line.isLine(line);
     var divider = this.a * line.b - line.a * this.b;
     if (divider !== 0)
       return {
@@ -38,7 +38,7 @@ Line.prototype = {
   },
 
   getBisector: function(line) {
-    Line.validate(line);
+    Line.isLine(line);
     return new Line({
       x: (this.x + line.x) / 2,
       y: (this.y + line.y) / 2,
