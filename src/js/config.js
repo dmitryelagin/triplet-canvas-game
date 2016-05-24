@@ -1,4 +1,5 @@
 // TODO Maybe merge general and rules
+// TODO Setting randomizers is untested
 // Full config
 TRIPLET.config = ({
 
