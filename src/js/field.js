@@ -71,29 +71,20 @@ Field.prototype = {
         colCenter = this.lines.ver[col].getBisector(this.lines.ver[col + 1]);
     return rowCenter.intersects(colCenter);
   },
-
+  
   getCellPosition: function(x, y) {
-    function getPosition(lines) {
-      var ln, dist, ang, dotAfterLine, i = 0;
+    var horizontal = new Line({ x: x, y: y, angle: 0 });
+        vertical = new Line({ x: x, y: y, angle: Math.PI / 2 });
+    function getPosition(lines, ruler) {
+      var dot, i = 0;
       do {
-        ln = lines[i];
-        dist = ln.distanceFrom(x, y);
-        dotAfterLine = dist < 0 && ln.angle > Math.PI / 2 ||
-                       dist >= 0 && ln.angle <= Math.PI / 2;
-      } while (dotAfterLine && ++i < lines.length);
+        dot = lines[i].intersects(ruler);
+      } while ((dot.x < x || dot.y < y) && ++i < lines.length);
       return i;
     }
-    /*
-    function getPosition(lines) {
-      var i = 0;
-      while (lines[i].distanceFrom(x, y) * lines[i].rotate < 0 &&
-             ++i < lines.length) {};
-      return i;
-    }
-    */
     return {
-      row: getPosition(this.lines.hor.slice(1, -1)),
-      col: getPosition(this.lines.ver.slice(1, -1))
+      row: getPosition(this.lines.hor.slice(1, -1), vertical),
+      col: getPosition(this.lines.ver.slice(1, -1), horizontal)
     };
   }
 

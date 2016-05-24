@@ -22,8 +22,8 @@ TRIPLET.config = ({
           imgID: [0, 1, 2, 3],
           move: 10, rotate: 0.08, scale: 0.08
         },
-        frames: { inRow: 1, total: 6, delay: 30 },
-        pause: 150
+        frames: { inRow: 1, total: 6, delay: 36 },
+        pause: 160
       },
       sign: {
         random: {

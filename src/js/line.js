@@ -1,3 +1,4 @@
+// TODO Delete distance method if not needed
 // Lines constructor, using slope–intercept form for setup
 TRIPLET.Line = (function() {
 
