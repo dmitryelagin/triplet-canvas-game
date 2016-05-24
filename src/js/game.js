@@ -28,7 +28,7 @@ Game = function(id) {
 
   assets.images.load(cfg.assets.images, function() {
     self.picture.drawField();
-    self.picture.canvas.addEventListener('click', self.onClick);
+    self.picture.canvas.addEventListener('click', self.onClick.bind(self));
   });
 
 };
@@ -37,8 +37,12 @@ Game.prototype = {
 
   constructor: TRIPLET.Game,
 
-  onClick: function() {
-
+  onClick: function(event) {
+    var coords = html.getClickCoords(event),
+        cell = this.field.getCellPosition(coords.x, coords.y),
+        moveSuccess = this.state.makeMove(cell.row, cell.col);
+    if (moveSuccess)
+      this.picture.drawSign(cell.row, cell.col, this.state.lastMove.player);
   }
 
 };

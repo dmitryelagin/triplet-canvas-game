@@ -1,5 +1,4 @@
 // Functions to work with HTML
-// TODO Get width and height from field object
 TRIPLET.html = {
 
   makeCanvas: function(id, width, height, parent) {
@@ -10,6 +9,14 @@ TRIPLET.html = {
     canvas.innerText = 'Your browser does not support HTML5 Canvas.';
     parent.appendChild(canvas);
     return canvas;
+  },
+
+  getClickCoords: function(event) {
+    var rect = event.target.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    };
   }
 
 };
