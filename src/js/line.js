@@ -1,4 +1,5 @@
 // TODO Delete distance method if not needed
+// TODO Maybe rewrite constructor and bisector method to keep angle in PI range
 // Lines constructor, using slope–intercept form for setup
 TRIPLET.Line = (function() {
 
@@ -28,13 +29,15 @@ Line.prototype = {
     throw new TypeError('Wrong point coordinates: ' + x + ' / ' + y);
   },
 
-  intersects: function(line) {
+  intersects: function(line, accuracy) {
+    var divider;
     Line.isLine(line);
-    var divider = this.a * line.b - line.a * this.b;
+    accuracy = accuracy || 8;
+    divider = this.a * line.b - line.a * this.b;
     if (divider !== 0)
       return {
-        x: -(this.c * line.b - line.c * this.b) / divider,
-        y: -(this.a * line.c - line.a * this.c) / divider
+        x: -((this.c * line.b - line.c * this.b) / divider).toFixed(accuracy),
+        y: -((this.a * line.c - line.a * this.c) / divider).toFixed(accuracy)
       };
   },
 

@@ -71,7 +71,7 @@ Field.prototype = {
         colCenter = this.lines.ver[col].getBisector(this.lines.ver[col + 1]);
     return rowCenter.intersects(colCenter);
   },
-  
+
   getCellPosition: function(x, y) {
     var horizontal = new Line({ x: x, y: y, angle: 0 });
         vertical = new Line({ x: x, y: y, angle: Math.PI / 2 });
@@ -79,7 +79,7 @@ Field.prototype = {
       var dot, i = 0;
       do {
         dot = lines[i].intersects(ruler);
-      } while ((dot.x < x || dot.y < y) && ++i < lines.length);
+      } while (dot.x <= x && dot.y <= y && ++i < lines.length);
       return i;
     }
     return {
