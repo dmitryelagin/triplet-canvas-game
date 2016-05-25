@@ -1,6 +1,9 @@
 // TODO Try to add depth for only win search
 // TODO Maybe add players externally
 // TODO Maybe REFACTOR too many .call() in .findWin()
+// TODO Return win as object instead of array
+// TODO Field array should be single-dimentional
+// TODO Implement findNextBestMove method
 // Game state class
 TRIPLET.State = (function() {
 
@@ -68,38 +71,6 @@ State.prototype = {
     this.turn++;
     return true;
   },
-
-  visitEmptyCellsBySpiral: (function() {
-
-    var SEARCH_DIRECTIONS = [[1, 0], [0, -1], [-1, 0], [0, 1]];
-
-    return function(callback) {
-      var startRow = ~~(cfg.rows / 2),
-          startCol = ~~(cfg.columns / 2),
-          maxDir = [startRow, startCol, startRow, startCol],
-          cell = [startRow, startCol],
-          changeDir = 0,
-          searchedCells = 0,
-          vector, direction, shift, result;
-      while (searchedCells < cfg.maxTurns) {
-        vector = changeDir % 4;
-        direction = changeDir++ % 2;
-        shift = SEARCH_DIRECTIONS[vector][direction];
-        do {
-          if (this.cellInRange(cell[0], cell[1])) {
-            if (this.field[cell[0]][cell[1]] === rule.emptyVal) {
-              result = callback.call(this, cell[0], cell[1]);
-              if (result !== undefined) return result;
-            }
-            searchedCells++;
-          }
-          cell[direction] += shift;
-        } while (cell[direction] * shift <= maxDir[vector] * shift);
-        maxDir[vector] += shift;
-      }
-    };
-
-  })(),
 
   // Find win or tie methods
   findWin: (function() {
@@ -200,6 +171,38 @@ State.prototype = {
 
   },
 
+  visitEmptyCellsBySpiral: (function() {
+
+    var SEARCH_DIRECTIONS = [[1, 0], [0, -1], [-1, 0], [0, 1]];
+
+    return function(callback) {
+      var startRow = ~~(cfg.rows / 2),
+          startCol = ~~(cfg.columns / 2),
+          maxDir = [startRow, startCol, startRow, startCol],
+          cell = [startRow, startCol],
+          changeDir = 0,
+          searchedCells = 0,
+          vector, direction, shift, result;
+      while (searchedCells < cfg.maxTurns) {
+        vector = changeDir % 4;
+        direction = changeDir++ % 2;
+        shift = SEARCH_DIRECTIONS[vector][direction];
+        do {
+          if (this.cellInRange(cell[0], cell[1])) {
+            if (this.field[cell[0]][cell[1]] === rule.emptyVal) {
+              result = callback.call(this, cell[0], cell[1]);
+              if (result !== undefined) return result;
+            }
+            searchedCells++;
+          }
+          cell[direction] += shift;
+        } while (cell[direction] * shift <= maxDir[vector] * shift);
+        maxDir[vector] += shift;
+      }
+    };
+
+  })(),
+
   // NegaMax implementation with fail-soft alpha-beta pruning
   getMoveMinimaxScore: function(maxPlayer, alpha, beta, depth) {
 
@@ -229,6 +232,10 @@ State.prototype = {
           (depth / rule.turnsPerRound + 1);
     this.visitEmptyCellsBySpiral(moveAndScore);
     return isMax ? alpha : beta;
+
+  },
+
+  findNextBestMove: function() {
 
   }
 
