@@ -1,4 +1,4 @@
-// Game main controller
+// Game main presenter
 TRIPLET.Game = (function() {
 
 var cfg = TRIPLET.config,
@@ -13,13 +13,14 @@ var cfg = TRIPLET.config,
 
 Game = function(id) {
 
+  // Object
   var self = this;
 
   // Model
   this.field = new Field();
   ufn.makeWorker(worker, function(workerReady) {
     self.state = workerReady;
-    self.state.onmessage = function(e) { console.log(e.data); };
+    self.state.onmessage = self.respond;
   }, 'js');
 
   // View
@@ -31,6 +32,7 @@ Game = function(id) {
           cfg.general.top + cfg.general.bottom + this.field.height,
           document.getElementsByTagName('body')[0]));
 
+  // Preload
   assets.images.load(cfg.assets.images, function() {
     self.picture.drawField();
     self.picture.canvas.addEventListener('click', self.onClick.bind(self));
@@ -43,9 +45,14 @@ Game.prototype = {
   constructor: TRIPLET.Game,
 
   onClick: function(event) {
-    var coords = html.getClickCoords(event),
-        cell = this.field.getCellPosition(coords.x, coords.y);
-    this.state.postMessage(cell);
+    var coords = html.getClickCoords(event);
+    this.state.postMessage({
+      move: this.field.getCellPosition(coords.x, coords.y)
+    });
+  },
+
+  respond: function(message) {
+    console.log(message.data);
   }
 
 };

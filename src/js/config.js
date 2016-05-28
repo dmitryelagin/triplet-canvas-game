@@ -13,7 +13,7 @@ TRIPLET.config = ({
   },
 
   players: [
-    { name: 'Ann', ai: 'hard', signID: 'x', color: 'ff0000' },
+    { name: 'Alice', ai: 'hard', signID: 'x', color: 'ff0000' },
     { name: 'Bob', ai: 'none', signID: 'o', color: '0000ff' }
   ],
 
