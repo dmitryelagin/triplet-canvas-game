@@ -1,5 +1,6 @@
 // TODO Throw exeption if there is no signID
 // TODO Clean constructor in the end
+// TODO isUser flag and ai setup are ugly
 // Player constructor
 TRIPLET.Player = (function() {
 
@@ -14,7 +15,7 @@ Player = function(setup, index) {
   this.signID = setup.signID;
   this.name = setup.name || 'Player';
   this.color = setup.color || '000000';
-  this.isUser = !!setup.ai;
+  this.isUser = !setup.ai || setup.ai === ai.none;
   this.ai = this.isUser ? ai.none : ai[setup.ai];
   this.maxTurns = this.getTurnsCount(cfg.maxTurns);
 };

@@ -90,11 +90,6 @@ TRIPLET.config = ({
       }
     }
 
-    (function(elem) {
-      makeRandomizers(elem.line.random);
-      makeRandomizers(elem.sign.random);
-    })(this.element);
-
     (function(cfg) {
       cfg.maxLineLength = Math.min(cfg.rows, cfg.columns);
       cfg.maxTurns = cfg.rows * cfg.columns;
@@ -103,6 +98,11 @@ TRIPLET.config = ({
     (function(self, rule) {
       rule.turnsPerRound = self.players.length * rule.signsPerRound;
     })(this, this.rules);
+
+    (function(elem) {
+      makeRandomizers(elem.line.random);
+      makeRandomizers(elem.sign.random);
+    })(this.element);
 
     delete this.init;
     return this;

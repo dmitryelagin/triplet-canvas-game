@@ -37,6 +37,31 @@ TRIPLET.utilities = {
       throw new TypeError('No Randomizer for this argument: ' + arg);
     }
 
+  },
+
+  function: {
+
+    makeWorker: function(fn, callback, subFolder, href) {
+      var worker;
+      if (typeof fn === 'function') {
+        worker = new Worker(URL.createObjectURL(new Blob(
+            [fn.toString().replace(/.*?{\s*/, '').replace(/\s*}.*$/, '')],
+            { type: 'javascript/worker' })));
+        worker.onmessage = function(e) {
+          if (e.data.init) {
+            worker.onmessage = function() {};
+            callback(worker);
+          } else {
+            throw new Error('Worker can not be initialized: ' + e.data.error);
+          }
+        };
+        worker.postMessage({
+          href: typeof href === 'string' ? href : document.location.href,
+          subFolder: typeof subFolder === 'string' ? subFolder : ''
+        });
+      }
+    }
+
   }
 
 };

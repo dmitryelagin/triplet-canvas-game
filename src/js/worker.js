@@ -1,26 +1,61 @@
 // TODO Add timers for later optimization
+// TODO Refactor handleMessage
+// TODO Function handleMessage should work noramlly with human player
 // Worker script for ai computing
-TRIPLET = {};
+TRIPLET.worker = function() {
 
-importScripts('utilities.js', 'config.js', 'player.js', 'state.js');
+TRIPLET = {};
 
 onmessage = (function() {
 
-  var state = new TRIPLET.State();
+  var state;
 
-  return function(e) {
-    var currentPlayer = state.currentPlayer(),
-        answer = {
-          moveSuccess: state.makeMove(e.data.row, e.data.col),
-          gameEnded: state.findWin() || state.isTie(),
-          currentPlayerID: currentPlayer.queue
-        };
-    answer.waitForAnswer = answer.moveSuccess && !answer.gameEnded &&
-        !currentPlayer.isUser;
+  function handleMessage(e) {
+    var aiStartTime, currentPlayer, answer;
+    player = state.getCurrentPlayer();
+    answer = {
+      success: state.makeMove(e.data.row, e.data.col),
+      lastMove: state.lastMove,
+      win: state.findWin(),
+      tie: state.isTie()
+    };
+    answer.waitForAnswer = answer.success && !answer.tie &&
+        !answer.lastMove.player.isUser &&
+        !answer.win.some(function(val) {
+          return val !== undefined;
+        });
     postMessage(answer);
-    if (answer.waitForAnswer) postMessage({
-      answer: state.findNextBestMove()
-    });
-  };
+    if (answer.waitForAnswer) {
+      aiStartTime = new Date();
+      answer.bestMove = state.findNextBestMove();
+      answer.aiSpeed = new Date() - aiStartTime;
+      answer.waitForAnswer = false;
+      postMessage(answer);
+    }
+  }
+
+  function init(e) {
+    var sub, href;
+    if (e.data.href) {
+      try {
+        sub = e.data.subFolder || '';
+        href = e.data.href.replace(/[^\/]*$/, '') +
+            sub.replace(/\\/g, '/').replace(/^\/|\/$/g, '') + '/';
+        importScripts(href + 'utilities.js', href + 'config.js',
+                      href + 'player.js', href + 'state.js');
+        state = new TRIPLET.State();
+        onmessage = handleMessage;
+        postMessage({ init: true });
+      } catch(err) {
+        postMessage({ init: false, error: err });
+      }
+    } else {
+      postMessage('Worker needs main file location: ' + e.data);
+    }
+  }
+
+  return init;
 
 })();
+
+};

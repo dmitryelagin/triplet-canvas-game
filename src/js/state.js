@@ -1,9 +1,9 @@
 // TODO Try to add depth for only win search
 // TODO Maybe add players externally
-// TODO Maybe REFACTOR too many .call() in .findWin()
-// TODO Return win as object instead of array
+// TODO Maybe refactor too many .call() in .findWin()
+// TODO Return win from findWin method as object instead of array
 // TODO Field array should be single-dimentional
-// TODO Implement findNextBestMove method
+// TODO Rewrite findNextBestMove method
 // Game state class
 TRIPLET.State = (function() {
 
@@ -225,7 +225,7 @@ State.prototype = {
       if (alpha >= beta) return true;
     }
 
-    if (arguments.length < 4) prepareFirstCall();
+    if (arguments.length < 4) prepareFirstCall.call(this);
     if (depth <= 0 || this.findWin('some') || this.isTie())
       return this.getMoveHeuristicScore(maxPlayer.ai.score) *
           (maxPlayer === this.lastMove.player ? 1 : -1) *
@@ -236,7 +236,24 @@ State.prototype = {
   },
 
   findNextBestMove: function() {
-
+    var scores = [],
+        deepState, i, j;
+    for (i = 0; i < cfg.rows; i++)
+      for (j = 0; j < cfg.columns; j++) {
+        deepState = this.copy();
+        if (deepState.makeMove(i, j)) scores.push({
+          row: i,
+          col: j,
+          minimax: deepState.getMoveMinimaxScore(),
+          heuristic: deepState.getMoveHeuristicScore()
+        });
+      }
+    scores.sort(function(a, b) {
+      return a.minimax === b.minimax ?
+          b.heuristic - a.heuristic :
+          b.minimax - a.minimax;
+    });
+    return scores[0];
   }
 
 };
