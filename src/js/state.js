@@ -2,9 +2,8 @@
 // TODO Maybe add players externally
 // TODO Maybe refactor too many .call() in .findWin()
 // TODO Return win from findWin method as object instead of array
-// TODO Field array should be single-dimentional
+// TODO Maybe field array should be single-dimentional
 // TODO Rewrite findNextBestMove method
-// TODO Method isTie works wrong
 // Game state class
 TRIPLET.State = (function() {
 
@@ -127,8 +126,9 @@ State.prototype = {
     }
     for (i = cfg.rows; i--;)
       for (j = cfg.columns; j--;)
-        if (this.field[i][j] === rule.emptyVal)
-          return !this.players.some(playerCanWin, this);
+        if (this.field[i][j] === rule.emptyVal &&
+            this.players.some(playerCanWin, this)) return false;
+    return true;
   },
 
   // Simple heuristics
