@@ -1,4 +1,5 @@
-// TODO Function handleMessage should work noramlly with human player
+// TODO Refactor handleMessage function
+// TODO Later delete TRIPLET object making from here
 // Worker script for ai computing
 TRIPLET.worker = function() {
 
@@ -9,18 +10,23 @@ onmessage = (function() {
   var state;
 
   function handleMessage(e) {
-    var answer, aiStartTime = new Date();
-    if (e.data.move) answer = {
-      success: state.makeMove(e.data.move.row, e.data.move.col),
-      lastMove: state.lastMove,
-      wins: state.findWin(),
-      tie: state.isTie()
-    };
-    if (e.data.advice) answer = {
-      bestMove: state.findNextBestMove(e.data.advice)
-    };
+    var answer = {},
+        aiStartTime = new Date();
+    if (e.data.move) {
+      answer.success = state.makeMove(e.data.move.row, e.data.move.col);
+      answer.lastMove = state.lastMove;
+      answer.wins = state.findWin();
+      answer.tie = state.isTie();
+      answer.terminate = answer.wins.some(function(val) {
+        return val !== undefined;
+      }) || answer.tie;
+    }
+    if (e.data.advice)
+      answer.bestMove = state.findNextBestMove(e.data.advice);
+    answer.player = state.getCurrentPlayer();
     answer.aiSpeed = new Date() - aiStartTime;
     postMessage(answer);
+    if (answer.terminate) close();
   }
 
   function init(e) {
