@@ -4,6 +4,7 @@
 // TODO Return win from findWin method as object instead of array
 // TODO Field array should be single-dimentional
 // TODO Rewrite findNextBestMove method
+// TODO Method isTie works wrong
 // Game state class
 TRIPLET.State = (function() {
 
