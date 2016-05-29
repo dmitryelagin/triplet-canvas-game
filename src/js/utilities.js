@@ -41,7 +41,7 @@ TRIPLET.utilities = {
 
   function: {
 
-    makeWorker: function(fn, callback, subFolder, href) {
+    makeWorker: function(fn, onload, subFolder, href) {
       var worker;
       if (typeof fn === 'function') {
         worker = new Worker(URL.createObjectURL(new Blob(
@@ -50,7 +50,7 @@ TRIPLET.utilities = {
         worker.onmessage = function(e) {
           if (e.data.init) {
             worker.onmessage = function() {};
-            callback(worker);
+            onload(worker);
           } else {
             throw new Error('Worker can not be initialized: ' + e.data.error);
           }
@@ -59,6 +59,7 @@ TRIPLET.utilities = {
           href: typeof href === 'string' ? href : document.location.href,
           subFolder: typeof subFolder === 'string' ? subFolder : ''
         });
+        return worker;
       }
     }
 

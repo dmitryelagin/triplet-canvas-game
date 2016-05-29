@@ -2,8 +2,10 @@
 // TODO Add timings in action
 // TODO Ask user to wait or terminate if user clicks while AI working
 // TODO Ask user to make turn without console
-// TODO Start game only after loading assets and worker
+// TODO Add some idle time for drawning field
+// TODO Maybe Field and Canvas should not be made here
 // TODO End game if bestMove is null
+// TODO Maybe partsToLoad should be dynamic number
 // Game main presenter
 TRIPLET.Game = (function() {
 
@@ -19,32 +21,33 @@ var cfg = TRIPLET.config,
 
 Game = function(id) {
 
-  // Support
-  var self = this;
+  var self = this,
+      partsToLoad = 3;
   this.userTurn = false;
 
-  // Model
-  this.field = new Field();
-  ufn.makeWorker(worker, function(workerReady) {
-    self.state = workerReady;
+  function startGame() {
+    if (!--partsToLoad) {
+      self.picture.drawField();
+      self.canvas.addEventListener('click', self.onClick.bind(self));
+      self.action();
+    }
+  }
+
+  assets.images.load(cfg.assets.images, startGame);
+  this.state = ufn.makeWorker(worker, function() {
     self.state.onmessage = self.respond.bind(self);
+    startGame();
   }, 'js');
 
-  // View
-  this.picture = new Picture(
-      this.field,
-      html.makeCanvas(
-          'triplet-' + id,
-          cfg.general.left + cfg.general.right + this.field.width,
-          cfg.general.top + cfg.general.bottom + this.field.height,
-          document.getElementsByTagName('body')[0]));
+  this.field = new Field();
+  this.canvas = html.makeCanvas(
+      'triplet-' + id,
+      cfg.general.left + cfg.general.right + this.field.width,
+      cfg.general.top + cfg.general.bottom + this.field.height,
+      document.getElementsByTagName('body')[0]);
+  this.picture = new Picture(this.field, this.canvas);
 
-  // Preload
-  assets.images.load(cfg.assets.images, function() {
-    self.picture.drawField();
-    self.picture.canvas.addEventListener('click', self.onClick.bind(self));
-    self.action();
-  });
+  startGame();
 
 };
 
