@@ -3,7 +3,7 @@
 // TODO Maybe refactor too many .call() in .findWin()
 // TODO Return win from findWin method as object instead of array
 // TODO Maybe field array should be single-dimentional
-// TODO Rewrite findNextBestMove method
+// TODO Optimize minimax to be more effective
 // Game state class
 TRIPLET.State = (function() {
 
@@ -147,7 +147,7 @@ State.prototype = {
           this.lastMove.col);
       // Longer line should be scored higher than four shorter lines
       return probableWins.filter(function(val) {
-        return val !== undefined;
+        return val;
       }).reduce(function(result, val) {
         return result + Math.pow(4, cfg.maxLineLength - val[2][0]) - 1;
       }, 0);
@@ -236,25 +236,37 @@ State.prototype = {
 
   },
 
-  findNextBestMove: function() {
-    var scores = [],
-        deepState, i, j;
-    for (i = 0; i < cfg.rows; i++)
-      for (j = 0; j < cfg.columns; j++) {
-        deepState = this.copy();
-        if (deepState.makeMove(i, j)) scores.push({
-          row: i,
-          col: j,
-          minimax: deepState.getMoveMinimaxScore(),
-          heuristic: deepState.getMoveHeuristicScore()
-        });
-      }
-    scores.sort(function(a, b) {
-      return a.minimax === b.minimax ?
-          b.heuristic - a.heuristic :
-          b.minimax - a.minimax;
+  findNextBestMoves: function() {
+
+    var scores,
+        tolerance = this.getCurrentPlayer().ai.tolerance,
+        priority = ['minimax', 'heuristic'];
+
+    function getAllCellsScores(self) {
+      return self.field.reduce(function(result, row, i) {
+        return result.concat(row.map(function(cell, j) {
+          var deepState = self.copy();
+          if (deepState.makeMove(i, j)) return {
+            row: i, col: j,
+            minimax: deepState.getMoveMinimaxScore(),
+            heuristic: deepState.getMoveHeuristicScore()
+          };
+        }));
+      }, []).filter(function(val) { return val; });
+    }
+
+    function maxOfProperties(prop) {
+      return Math.max.apply(null, scores.map(function(obj) {
+        return obj[prop];
+      }));
+    }
+
+    scores = getAllCellsScores(this);
+    priority.forEach(function(prop) {
+      var max = maxOfProperties(prop) - tolerance;
+      scores = scores.filter(function(val) { return val[prop] >= max; });
     });
-    return scores[0];
+    return scores;
   }
 
 };

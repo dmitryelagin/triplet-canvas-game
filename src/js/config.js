@@ -13,8 +13,8 @@ TRIPLET.config = ({
   },
 
   players: [
-    { name: 'Alice', ai: 'hard', signID: 'x', color: 'ff0000' },
-    { name: 'Bob', ai: 'none', signID: 'o', color: '0000ff' }
+    { name: 'Alice', ai: 'none', signID: 'x', color: 'ff0000' },
+    { name: 'Bob', ai: 'hard', signID: 'o', color: '0000ff' }
   ],
 
   element: {
@@ -51,22 +51,22 @@ TRIPLET.config = ({
     none: {
       score: {
         sign: { own: 0, enemy: 0, mainEnemy: 0 }, win: 0, tie: 0
-      }, depth: 0, infelicity: 0
+      }, depth: 0, tolerance: 0
     },
     hard: {
       score: {
         sign: { own: 6, enemy: 4, mainEnemy: 5 }, win: 100000, tie: 100
-      }, depth: 4, infelicity: 2
+      }, depth: 4, tolerance: 5
     },
     normal: {
       score: {
         sign: { own: 5, enemy: 5, mainEnemy: 5 }, win: 10000, tie: 50
-      }, depth: 1, infelicity: 5
+      }, depth: 2, tolerance: 10
     },
     easy: {
       score: {
         sign: { own: 5, enemy: 5, mainEnemy: 5 }, win: 100, tie: 10
-      }, depth: 0, infelicity: 30
+      }, depth: 0, tolerance: 30
     }
   },
 

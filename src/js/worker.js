@@ -7,7 +7,7 @@ TRIPLET = {};
 
 onmessage = (function() {
 
-  var state;
+  var state, random;
 
   function handleMessage(e) {
     var answer = {},
@@ -22,7 +22,7 @@ onmessage = (function() {
       }) || answer.tie;
     }
     if (e.data.advice)
-      answer.bestMove = state.findNextBestMove(e.data.advice);
+      answer.bestMove = random.item(state.findNextBestMoves()) || null;
     answer.player = state.getCurrentPlayer();
     answer.aiSpeed = new Date() - aiStartTime;
     postMessage(answer);
@@ -39,6 +39,7 @@ onmessage = (function() {
         importScripts(href + 'utilities.js', href + 'config.js',
                       href + 'player.js', href + 'state.js');
         state = new TRIPLET.State();
+        random = TRIPLET.utilities.random;
         onmessage = handleMessage;
         postMessage({ init: true });
       } catch(err) {

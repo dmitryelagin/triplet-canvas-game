@@ -2,6 +2,8 @@
 // TODO Add timings in action
 // TODO Ask user to wait or terminate if user clicks while AI working
 // TODO Ask user to make turn without console
+// TODO Start game only after loading assets and worker
+// TODO End game if bestMove is null
 // Game main presenter
 TRIPLET.Game = (function() {
 
@@ -61,6 +63,7 @@ Game.prototype = {
   },
 
   respond: function(message) {
+    console.log(message.data.aiSpeed);
     if (message.data.bestMove) this.tryMove(message.data.bestMove);
     else this.action(message.data);
   },
