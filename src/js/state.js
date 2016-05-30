@@ -4,6 +4,7 @@
 // TODO Return win from findWin method as object instead of array
 // TODO Maybe field array should be single-dimentional
 // TODO Optimize minimax to be more effective
+// TODO Try to make iterator array from visitSpiral method
 // Game state class
 TRIPLET.State = (function() {
 
@@ -145,12 +146,11 @@ State.prototype = {
           [cfg.maxLineLength, Infinity, playerID === lastPlayerID ? 0 : 1],
           this.lastMove.row,
           this.lastMove.col);
-      // Longer line should be scored higher than four shorter lines
       return probableWins.filter(function(val) {
         return val;
       }).reduce(function(result, val) {
         return result + Math.pow(4, cfg.maxLineLength - val[2][0]) - 1;
-      }, 0);
+      }, 0);  // Long line should be scored higher than 4 short lines
     }
 
     function multiplyer(i) {
