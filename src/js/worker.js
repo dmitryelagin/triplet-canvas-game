@@ -11,7 +11,7 @@ onmessage = (function() {
 
   function handleMessage(e) {
     var answer = {},
-        aiStartTime = new Date();
+        aiStartTime = Date.now();
     if (e.data.move) {
       answer.success = state.makeMove(e.data.move.row, e.data.move.col);
       answer.lastMove = state.lastMove;
@@ -24,7 +24,7 @@ onmessage = (function() {
     if (e.data.advice)
       answer.bestMove = random.item(state.findNextBestMoves()) || null;
     answer.player = state.getCurrentPlayer();
-    answer.aiSpeed = new Date() - aiStartTime;
+    answer.aiSpeed = Date.now() - aiStartTime;
     postMessage(answer);
     if (answer.terminate) close();
   }
