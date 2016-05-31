@@ -19,6 +19,7 @@ State = function(source) {
     this.turn = source.turn;
     this.lastMove = source.lastMove;
     this.players = source.players;
+    this.spiralOrder = source.spiralOrder;
     this.field = this.fill(function(i, j) {
       return source.field[i][j];
     });
@@ -26,6 +27,7 @@ State = function(source) {
     this.turn = 0;
     this.lastMove = {};
     this.players = players.map(Player);
+    this.spiralOrder = this.makeSpiralOrder();
     this.field = this.fill(function() {
       return rule.emptyVal;
     });
@@ -46,48 +48,40 @@ State.prototype = {
     return field;
   },
 
-  // DON'T CONNECTED
-  makeSpiralOrder: function() {
+  makeSpiralOrder: (function() {
 
-    var SEARCH_DIRECTIONS = [[1, 0], [0, -1], [-1, 0], [0, 1]],
-        result = [],
-        row = ~~(cfg.rows / 2),
-        col = ~~(cfg.columns / 2),
-        turns = 0,
-        straight = 0,
-        beforeTurn = 0,
-        searched = 0,
-        vector,
-        indexes = makeIndexesTable();
+    var DIRECTION_UP_TO_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
 
-    function makeIndexesTable() {
-      var indexes = [],
-          index = cfg.maxTurns,
-          i, j;
-      for (i = cfg.rows; i--;) {
-        indexes[i] = [];
-        for (j = cfg.columns; j--;) indexes[i][j] = --index;
+    return function() {
+
+      var row = ~~(cfg.rows / 2),
+          col = ~~(cfg.columns / 2),
+          result = [],
+          turns = 0,
+          straight = 0,
+          beforeTurn = 0,
+          searched = 0,
+          vector;
+
+      while (searched < cfg.maxTurns) {
+        if (this.cellInRange(row, col)) {
+          result.push({ row: row, col: col });
+          searched++;
+        }
+        vector = turns % 4;
+        row += DIRECTION_UP_TO_CCW[vector][0];
+        col += DIRECTION_UP_TO_CCW[vector][1];
+        if (beforeTurn-- === 0) {
+          turns++;
+          beforeTurn = straight;
+          if (vector % 2 === 0) straight++;
+        }
       }
-      return indexes;
-    }
+      return result;
 
-    while (searched < cfg.maxTurns) {
-      if (row >= 0 && row < cfg.rows && col >= 0 && col < cfg.columns) {
-        result.push(indexes[row][col]);
-        searched++;
-      }
-      vector = turns % 4;
-      row += SEARCH_DIRECTIONS[vector][0];
-      col += SEARCH_DIRECTIONS[vector][1];
-      if (beforeTurn-- === 0) {
-        turns++;
-        beforeTurn = straight;
-        if (vector % 2 === 0) straight++;
-      }
-    }
-    return result;
+    };
 
-  },
+  })(),
 
   // General methods
   getCurrentPlayer: function() {
@@ -215,38 +209,6 @@ State.prototype = {
 
   },
 
-  visitEmptyCellsBySpiral: (function() {
-
-    var SEARCH_DIRECTIONS = [[1, 0], [0, -1], [-1, 0], [0, 1]];
-
-    return function(callback) {
-      var startRow = ~~(cfg.rows / 2),
-          startCol = ~~(cfg.columns / 2),
-          maxDir = [startRow, startCol, startRow, startCol],
-          cell = [startRow, startCol],
-          changeDir = 0,
-          searchedCells = 0,
-          vector, direction, shift, result;
-      while (searchedCells < cfg.maxTurns) {
-        vector = changeDir % 4;
-        direction = changeDir++ % 2;
-        shift = SEARCH_DIRECTIONS[vector][direction];
-        do {
-          if (this.cellInRange(cell[0], cell[1])) {
-            if (this.field[cell[0]][cell[1]] === rule.emptyVal) {
-              result = callback.call(this, cell[0], cell[1]);
-              if (result !== undefined) return result;
-            }
-            searchedCells++;
-          }
-          cell[direction] += shift;
-        } while (cell[direction] * shift <= maxDir[vector] * shift);
-        maxDir[vector] += shift;
-      }
-    };
-
-  })(),
-
   // NegaMax implementation with fail-soft alpha-beta pruning
   getMoveMinimaxScore: function(maxPlayer, alpha, beta, depth) {
 
@@ -259,14 +221,14 @@ State.prototype = {
       depth = maxPlayer.ai.depth;
     }
 
-    function moveAndScore(row, col) {
+    function moveAndScore(cell) {
       var deepState, score;
       deepState = this.copy();
-      deepState.makeMove(row, col);
+      deepState.makeMove(cell.row, cell.col);
       score = deepState.getMoveMinimaxScore(maxPlayer, alpha, beta, depth - 1);
       if (isMax) alpha = Math.max(alpha, score);
       else beta = Math.min(beta, score);
-      if (alpha >= beta) return true;
+      return alpha >= beta;
     }
 
     if (arguments.length < 4) prepareFirstCall.call(this);
@@ -274,7 +236,7 @@ State.prototype = {
       return this.getMoveHeuristicScore(maxPlayer.ai.score) *
           (maxPlayer === this.lastMove.player ? 1 : -1) *
           (depth / rule.turnsPerRound + 1);
-    this.visitEmptyCellsBySpiral(moveAndScore);
+    this.spiralOrder.some(moveAndScore, this);
     return isMax ? alpha : beta;
 
   },
