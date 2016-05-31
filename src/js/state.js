@@ -4,7 +4,7 @@
 // TODO Return win from findWin method as object instead of array
 // TODO Maybe field array should be single-dimentional
 // TODO Optimize minimax to be more effective
-// TODO Try to make iterator array from visitSpiral method
+// TODO Adapt makeSpiralOrder method
 // Game state class
 TRIPLET.State = (function() {
 
@@ -44,6 +44,49 @@ State.prototype = {
       for (j = cfg.columns; j--;) field[i][j] = filler(i, j);
     }
     return field;
+  },
+
+  // DON'T CONNECTED
+  makeSpiralOrder: function() {
+
+    var SEARCH_DIRECTIONS = [[1, 0], [0, -1], [-1, 0], [0, 1]],
+        result = [],
+        row = ~~(cfg.rows / 2),
+        col = ~~(cfg.columns / 2),
+        turns = 0,
+        straight = 0,
+        beforeTurn = 0,
+        searched = 0,
+        vector,
+        indexes = makeIndexesTable();
+
+    function makeIndexesTable() {
+      var indexes = [],
+          index = cfg.maxTurns,
+          i, j;
+      for (i = cfg.rows; i--;) {
+        indexes[i] = [];
+        for (j = cfg.columns; j--;) indexes[i][j] = --index;
+      }
+      return indexes;
+    }
+
+    while (searched < cfg.maxTurns) {
+      if (row >= 0 && row < cfg.rows && col >= 0 && col < cfg.columns) {
+        result.push(indexes[row][col]);
+        searched++;
+      }
+      vector = turns % 4;
+      row += SEARCH_DIRECTIONS[vector][0];
+      col += SEARCH_DIRECTIONS[vector][1];
+      if (beforeTurn-- === 0) {
+        turns++;
+        beforeTurn = straight;
+        if (vector % 2 === 0) straight++;
+      }
+    }
+    return result;
+
   },
 
   // General methods
