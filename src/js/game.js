@@ -66,8 +66,11 @@ Game.prototype = {
   },
 
   respond: function(message) {
-    console.log(message.data.aiSpeed);
-    if (message.data.bestMove) this.tryMove(message.data.bestMove);
+    console.log('time: ' + message.data.aiSpeed);
+    if (message.data.bestMove) {
+      this.tryMove(message.data.bestMove);
+      console.log('minimax score: ' + message.data.bestMove.minimax);
+    }
     else this.action(message.data);
   },
 

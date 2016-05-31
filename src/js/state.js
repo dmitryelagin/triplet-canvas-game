@@ -4,7 +4,7 @@
 // TODO Return win from findWin method as object instead of array
 // TODO Maybe field array should be single-dimentional
 // TODO Optimize minimax to be more effective
-// TODO Adapt makeSpiralOrder method
+// TODO Make all other orders
 // Game state class
 TRIPLET.State = (function() {
 
@@ -27,7 +27,7 @@ State = function(source) {
     this.turn = 0;
     this.lastMove = {};
     this.players = players.map(Player);
-    this.spiralOrder = this.makeSpiralOrder();
+    this.spiralOrder = this.makeSpiralOrder().reverse();
     this.field = this.fill(function() {
       return rule.emptyVal;
     });
@@ -50,7 +50,7 @@ State.prototype = {
 
   makeSpiralOrder: (function() {
 
-    var DIRECTION_UP_TO_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
+    var SPIRAL_DIRECTION_N_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
 
     return function() {
 
@@ -65,12 +65,12 @@ State.prototype = {
 
       while (searched < cfg.maxTurns) {
         if (this.cellInRange(row, col)) {
-          result.push({ row: row, col: col });
+          result.push([row, col]);
           searched++;
         }
         vector = turns % 4;
-        row += DIRECTION_UP_TO_CCW[vector][0];
-        col += DIRECTION_UP_TO_CCW[vector][1];
+        row += SPIRAL_DIRECTION_N_CCW[vector][0];
+        col += SPIRAL_DIRECTION_N_CCW[vector][1];
         if (beforeTurn-- === 0) {
           turns++;
           beforeTurn = straight;
@@ -84,6 +84,10 @@ State.prototype = {
   })(),
 
   // General methods
+  copy: function() {
+    return new State(this);
+  },
+
   getCurrentPlayer: function() {
     return this.players[~~(this.turn / rule.signsPerRound) %
         this.players.length];
@@ -93,16 +97,23 @@ State.prototype = {
     return row >= 0 && row < cfg.rows && col >= 0 && col < cfg.columns;
   },
 
-  copy: function() {
-    return new State(this);
+  cellIsEmpty: function(row, col) {
+    return this.field[row][col] === rule.emptyVal;
+  },
+
+  visitEmptyCells: function(order, callback) {
+    for (var i = order.length; i--;)
+      if (this.cellIsEmpty.apply(this, order[i])) {
+        result = callback.apply(this, order[i]);
+        if (result !== undefined) return result;
+      }
   },
 
   makeMove: function(row, col) {
-    if (this.field[row][col] !== rule.emptyVal || !this.cellInRange(row, col))
+    if (!this.cellIsEmpty(row, col) || !this.cellInRange(row, col))
       return false;
     this.lastMove = {
-      row: row,
-      col: col,
+      row: row, col: col,
       player: this.getCurrentPlayer()
     };
     this.field[row][col] = this.lastMove.player.queue;
@@ -164,8 +175,8 @@ State.prototype = {
     }
     for (i = cfg.rows; i--;)
       for (j = cfg.columns; j--;)
-        if (this.field[i][j] === rule.emptyVal &&
-            this.players.some(playerCanWin, this)) return false;
+        if (this.cellIsEmpty(i, j) && this.players.some(playerCanWin, this))
+          return false;
     return true;
   },
 
@@ -221,14 +232,14 @@ State.prototype = {
       depth = maxPlayer.ai.depth;
     }
 
-    function moveAndScore(cell) {
+    function moveAndScore(row, col) {
       var deepState, score;
       deepState = this.copy();
-      deepState.makeMove(cell.row, cell.col);
+      deepState.makeMove(row, col);
       score = deepState.getMoveMinimaxScore(maxPlayer, alpha, beta, depth - 1);
       if (isMax) alpha = Math.max(alpha, score);
       else beta = Math.min(beta, score);
-      return alpha >= beta;
+      if (alpha >= beta) return true;
     }
 
     if (arguments.length < 4) prepareFirstCall.call(this);
@@ -236,7 +247,7 @@ State.prototype = {
       return this.getMoveHeuristicScore(maxPlayer.ai.score) *
           (maxPlayer === this.lastMove.player ? 1 : -1) *
           (depth / rule.turnsPerRound + 1);
-    this.spiralOrder.some(moveAndScore, this);
+    this.visitEmptyCells(this.spiralOrder, moveAndScore);
     return isMax ? alpha : beta;
 
   },

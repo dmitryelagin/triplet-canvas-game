@@ -1,5 +1,6 @@
 // TODO Maybe merge general and rules
 // TODO Setting randomizers is untested
+// TODO Minimax depth should be higher
 // Full config
 TRIPLET.config = ({
 
