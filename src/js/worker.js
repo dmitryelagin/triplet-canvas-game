@@ -13,7 +13,7 @@ onmessage = (function() {
     var answer = {},
         aiStartTime = Date.now();
     if (e.data.move) {
-      answer.success = state.makeMove(e.data.move.row, e.data.move.col);
+      answer.success = !!state.makeMove(e.data.move.row, e.data.move.col);
       answer.lastMove = state.lastMove;
       answer.wins = state.findWin();
       answer.tie = state.isTie();

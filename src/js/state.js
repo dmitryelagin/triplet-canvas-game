@@ -5,6 +5,7 @@
 // TODO Maybe field array should be single-dimentional
 // TODO Optimize minimax to be more effective
 // TODO Make all other orders
+// TODO Refactor findNextBestMoves method for new makeMove returns
 // Game state class
 TRIPLET.State = (function() {
 
@@ -103,22 +104,20 @@ State.prototype = {
 
   visitEmptyCells: function(order, callback) {
     for (var i = order.length; i--;)
-      if (this.cellIsEmpty.apply(this, order[i])) {
-        result = callback.apply(this, order[i]);
-        if (result !== undefined) return result;
-      }
+      if (this.cellIsEmpty.apply(this, order[i]) &&
+          callback.apply(this, order[i])) return;
   },
 
   makeMove: function(row, col) {
-    if (!this.cellIsEmpty(row, col) || !this.cellInRange(row, col))
-      return false;
-    this.lastMove = {
-      row: row, col: col,
-      player: this.getCurrentPlayer()
-    };
-    this.field[row][col] = this.lastMove.player.queue;
-    this.turn++;
-    return true;
+    if (this.cellIsEmpty(row, col) && this.cellInRange(row, col)) {
+      this.lastMove = {
+        row: row, col: col,
+        player: this.getCurrentPlayer()
+      };
+      this.field[row][col] = this.lastMove.player.queue;
+      this.turn++;
+      return this;
+    }
   },
 
   // Find win or tie methods
@@ -233,13 +232,11 @@ State.prototype = {
     }
 
     function moveAndScore(row, col) {
-      var deepState, score;
-      deepState = this.copy();
-      deepState.makeMove(row, col);
-      score = deepState.getMoveMinimaxScore(maxPlayer, alpha, beta, depth - 1);
+      var score = this.copy().makeMove(row, col).getMoveMinimaxScore(
+          maxPlayer, alpha, beta, depth - 1);
       if (isMax) alpha = Math.max(alpha, score);
       else beta = Math.min(beta, score);
-      if (alpha >= beta) return true;
+      return alpha >= beta;
     }
 
     if (arguments.length < 4) prepareFirstCall.call(this);
