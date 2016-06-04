@@ -57,17 +57,17 @@ TRIPLET.config = ({
     hard: {
       score: {
         sign: { own: 6, enemy: 4, mainEnemy: 5 }, win: 100000, tie: 100
-      }, depth: 4, tolerance: 5
+      }, depth: 5, tolerance: 5
     },
     normal: {
       score: {
         sign: { own: 5, enemy: 5, mainEnemy: 5 }, win: 10000, tie: 50
-      }, depth: 2, tolerance: 10
+      }, depth: 3, tolerance: 10
     },
     easy: {
       score: {
         sign: { own: 5, enemy: 5, mainEnemy: 5 }, win: 100, tie: 10
-      }, depth: 0, tolerance: 30
+      }, depth: 1, tolerance: 30
     }
   },
 

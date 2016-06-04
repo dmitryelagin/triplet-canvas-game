@@ -18,7 +18,7 @@ State = function(source) {
     this.turn = source.turn;
     this.lastMove = source.lastMove;
     this.players = source.players;
-    this.spiralOrder = source.spiralOrder;
+    this.orders = source.orders;
     this.field = this.fill(function(i, j) {
       return source.field[i][j];
     });
@@ -26,7 +26,10 @@ State = function(source) {
     this.turn = 0;
     this.lastMove = {};
     this.players = players.map(Player);
-    this.spiralOrder = this.makeSpiralOrder().reverse();
+    this.orders = {
+      normal: this.makeNormalOrder().reverse(),
+      spiral: this.makeSpiralOrder().reverse()
+    };
     this.field = this.fill(function() {
       return rule.emptyVal;
     });
@@ -47,26 +50,32 @@ State.prototype = {
     return field;
   },
 
+  makeNormalOrder: function() {
+    var row, col, result = [];
+    for (row = 0; row < cfg.rows; row++)
+      for (col = 0; col < cfg.columns; col++)
+        result.push([row, col]);
+    return result;
+  },
+
   makeSpiralOrder: (function() {
 
-    var SPIRAL_DIRECTION_N_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
+    var ORDER_SPIRAL_N_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
 
     return function() {
-
       var row = ~~(cfg.rows / 2),
           col = ~~(cfg.columns / 2),
           result = [],
           vector,
           turns = 0, straight = 0, beforeTurn = 0, searched = 0;
-
       while (searched < cfg.maxTurns) {
         if (this.cellInRange(row, col)) {
           result.push([row, col]);
           searched++;
         }
         vector = turns % 4;
-        row += SPIRAL_DIRECTION_N_CCW[vector][0];
-        col += SPIRAL_DIRECTION_N_CCW[vector][1];
+        row += ORDER_SPIRAL_N_CCW[vector][0];
+        col += ORDER_SPIRAL_N_CCW[vector][1];
         if (beforeTurn-- === 0) {
           turns++;
           beforeTurn = straight;
@@ -74,7 +83,6 @@ State.prototype = {
         }
       }
       return result;
-
     };
 
   })(),
@@ -97,10 +105,11 @@ State.prototype = {
     return this.field[row][col] === rule.emptyVal;
   },
 
-  visitEmptyCells: function(order, callback) {
-    for (var i = order.length; i--;)
-      if (this.cellIsEmpty.apply(this, order[i]) &&
-          callback.apply(this, order[i])) return;
+  visitCells: function(order, fn, filter) {
+    var i;
+    filter = filter || function() { return true; };
+    for (i = order.length; i--;)
+      if (filter.apply(this, order[i]) && fn.apply(this, order[i])) return true;
   },
 
   makeMove: function(row, col) {
@@ -118,7 +127,7 @@ State.prototype = {
   // Find win or tie methods
   findWin: (function() {
 
-    var LINES_DIRECTIONS = [[0, 1], [1, 0], [-1, 1], [1, 1]],
+    var DIRECTIONS = [[0, 1], [1, 0], [-1, 1], [1, 1]],
         DEFAULT_LIMITS = [Infinity, 0];
 
     return function(method, codes, limits, row, col) {
@@ -151,7 +160,7 @@ State.prototype = {
         col = this.lastMove.col;
       }
       if (codes.length === limits.length)
-        return LINES_DIRECTIONS[method](getWinLine, this);
+        return DIRECTIONS[method](getWinLine, this);
       throw new Error('Wrong findWin method initialization.');
 
     };
@@ -159,18 +168,15 @@ State.prototype = {
   })(),
 
   isTie: function() {
-    var i, j;
-    function playerCanWin(plr) {
-      var remains = plr.maxTurns - plr.getTurnsCount(this.turn);
-      return this.findWin(
-          'some', [plr.queue, rule.emptyVal], [rule.winLength, remains], i, j);
+    function somebodyCanWin(row, col) {
+      return this.players.some(function canWin(player) {
+        var remains = player.maxTurns - player.getTurnsCount(this.turn);
+        return this.findWin('some',
+            [player.queue, rule.emptyVal], [rule.winLength, remains], row, col);
+      }, this);
     }
-    if (this.turn < rule.turnsForTie) return false;
-    for (i = cfg.rows; i--;)
-      for (j = cfg.columns; j--;)
-        if (this.cellIsEmpty(i, j) && this.players.some(playerCanWin, this))
-          return false;
-    return true;
+    return !(this.turn < rule.turnsForTie ||
+        this.visitCells(this.orders.normal, somebodyCanWin, this.cellIsEmpty));
   },
 
   // Simple heuristics
@@ -239,7 +245,7 @@ State.prototype = {
       return this.getMoveHeuristicScore(maxPlayer.ai.score) *
           (maxPlayer === this.lastMove.player ? 1 : -1) *
           (depth / rule.turnsPerRound + 1);
-    this.visitEmptyCells(this.spiralOrder, rateMove);
+    this.visitCells(this.orders.spiral, rateMove, this.cellIsEmpty);
     return isMax ? alpha : beta;
 
   },

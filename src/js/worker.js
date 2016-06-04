@@ -43,7 +43,7 @@ onmessage = (function() {
         onmessage = handleMessage;
         postMessage({ init: true });
       } catch(err) {
-        postMessage({ init: false, error: err });
+        postMessage({ init: false, error: err.message });
       }
     } else {
       postMessage('Worker needs main file location: ' + e.data);
