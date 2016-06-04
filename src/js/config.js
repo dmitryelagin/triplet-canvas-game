@@ -98,6 +98,7 @@ TRIPLET.config = ({
 
     (function(self, rule) {
       rule.turnsPerRound = self.players.length * rule.signsPerRound;
+      rule.turnsForTie = rule.winLength * 2 - 1;
     })(this, this.rules);
 
     (function(elem) {

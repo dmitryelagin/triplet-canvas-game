@@ -1,8 +1,6 @@
 // TODO Try to add depth for only win search
 // TODO Maybe add players externally
-// TODO Maybe refactor too many .call() in .findWin()
 // TODO Return win from findWin method as object instead of array
-// TODO Maybe field array should be single-dimentional
 // TODO Optimize minimax to be more effective
 // TODO Make all other orders
 // TODO Refactor findNextBestMoves method for new makeMove returns
@@ -58,11 +56,8 @@ State.prototype = {
       var row = ~~(cfg.rows / 2),
           col = ~~(cfg.columns / 2),
           result = [],
-          turns = 0,
-          straight = 0,
-          beforeTurn = 0,
-          searched = 0,
-          vector;
+          vector,
+          turns = 0, straight = 0, beforeTurn = 0, searched = 0;
 
       while (searched < cfg.maxTurns) {
         if (this.cellInRange(row, col)) {
@@ -126,41 +121,38 @@ State.prototype = {
     var LINES_DIRECTIONS = [[0, 1], [1, 0], [-1, 1], [1, 1]],
         DEFAULT_LIMITS = [Infinity, 0];
 
-    return function(method, codes, limits, moveRow, moveCol) {
+    return function(method, codes, limits, row, col) {
 
-      function getInlineCells(lim, dirX, dirY, counter) {
-        var row = moveRow + dirX * counter,
-            col = moveCol + dirY * counter,
+      function getInlineCells(lim, dirR, dirC, counter) {
+        var nextRow = row + dirR * counter,
+            nextCol = col + dirC * counter,
             i;
-        if (this.cellInRange(row, col))
+        if (this.cellInRange(nextRow, nextCol))
           for (i = 0; i < codes.length; i++)
-            if (this.field[row][col] === codes[i] && lim[i] && lim[i]-- > 0)
-              return getInlineCells.call(this, lim, dirX, dirY, counter + 1);
+            if (this.field[nextRow][nextCol] === codes[i] && lim[i]-- > 0)
+              return getInlineCells.call(this, lim, dirR, dirC, counter + 1);
         return counter;
       }
 
       function getWinLine(dir) {
         var lim = limits.slice(),
-            part0 = getInlineCells.call(this, lim, dir[0], dir[1], 0),
-            part1 = getInlineCells.call(this, lim, -dir[0], -dir[1], 1) - 1;
-        if (part0 + part1 >= rule.winLength)
-          return [codes, limits, lim, part0, part1, dir];
+            len0 = getInlineCells.call(this, lim, dir[0], dir[1], 0),
+            len1 = getInlineCells.call(this, lim, -dir[0], -dir[1], 1) - 1;
+        if (len0 + len1 >= rule.winLength)
+          return [codes, limits, lim, len0, len1, dir];
       }
 
-      function validateInput() {
-        if (!(method in Array.prototype)) method = 'map';
-        if (codes === undefined) codes = this.lastMove.player.queue;
-        if (!Array.isArray(limits)) limits = DEFAULT_LIMITS;
-        if (!this.cellInRange(moveRow, moveCol)) {
-          moveRow = this.lastMove.row;
-          moveCol = this.lastMove.col;
-        }
+      if (method !== 'map' && method !== 'some') method = 'map';
+      if (!Array.isArray(codes))
+        codes = [this.lastMove.player.queue, rule.emptyVal];
+      if (!Array.isArray(limits)) limits = DEFAULT_LIMITS;
+      if (!this.cellInRange(row, col)) {
+        row = this.lastMove.row;
+        col = this.lastMove.col;
       }
-
-      if (arguments.length < 5) validateInput.call(this);
-      if (typeof codes !== 'object' || !Array.isArray(codes))
-        codes = [codes, rule.emptyVal];
-      return LINES_DIRECTIONS[method](getWinLine, this);
+      if (codes.length === limits.length)
+        return LINES_DIRECTIONS[method](getWinLine, this);
+      throw new Error('Wrong findWin method initialization.');
 
     };
 
@@ -170,8 +162,10 @@ State.prototype = {
     var i, j;
     function playerCanWin(plr) {
       var remains = plr.maxTurns - plr.getTurnsCount(this.turn);
-      return this.findWin('some', plr.queue, [rule.winLength, remains], i, j);
+      return this.findWin(
+          'some', [plr.queue, rule.emptyVal], [rule.winLength, remains], i, j);
     }
+    if (this.turn < rule.turnsForTie) return false;
     for (i = cfg.rows; i--;)
       for (j = cfg.columns; j--;)
         if (this.cellIsEmpty(i, j) && this.players.some(playerCanWin, this))
@@ -184,23 +178,24 @@ State.prototype = {
 
     var score = 0,
         lastPlayerID = this.lastMove.player.queue,
-        i, j, playerID;
+        playersCount = this.players.length,
+        i, playerID;
+    scores = scores || this.lastMove.player.ai.score;
 
     function scoreSignsAround() {
-      var probableWins = this.findWin(
-          'map',
-          [playerID, rule.emptyVal, lastPlayerID],
-          [cfg.maxLineLength, Infinity, playerID === lastPlayerID ? 0 : 1],
-          this.lastMove.row,
-          this.lastMove.col);
-      return probableWins.filter(function(val) {
-        return val;
-      }).reduce(function(result, val) {
-        return result + Math.pow(4, cfg.maxLineLength - val[2][0]) - 1;
+      var codes = [playerID, rule.emptyVal, lastPlayerID],
+          limits = [cfg.maxLineLength, Infinity, 1],
+          probableWins;
+      if (playerID === lastPlayerID) limits[2] = 0;
+      probableWins = this.findWin(
+          'map', codes, limits, this.lastMove.row, this.lastMove.col);
+      return probableWins.reduce(function(score, val) {
+        if (val) score += Math.pow(4, cfg.maxLineLength - val[2][0]) - 1;
+        return score;
       }, 0);  // Long line should be scored higher than 4 short lines
     }
 
-    function multiplyer(i) {
+    function ratio(i) {
       switch (i) {
       case 0: return scores.sign.own;
       case 1: return scores.sign.mainEnemy;
@@ -208,11 +203,11 @@ State.prototype = {
       }
     }
 
-    scores = scores || this.lastMove.player.ai.score;
-    for (i = 0, j = this.players.length; i < j; i++) {
-      playerID = (lastPlayerID + i) % j;
-      if (this.findWin('some', playerID)) return scores.win * multiplyer(i);
-      score += scoreSignsAround.call(this) * multiplyer(i);
+    for (i = 0; i < playersCount; i++) {
+      playerID = (lastPlayerID + i) % playersCount;
+      if (this.findWin('some', [playerID, rule.emptyVal]))
+        return scores.win * ratio(i);
+      score += scoreSignsAround.call(this) * ratio(i);
     }
     if (this.isTie()) return scores.tie;
     return score;
@@ -224,14 +219,14 @@ State.prototype = {
 
     var isMax = maxPlayer === this.getCurrentPlayer();
 
-    function prepareFirstCall() {
+    function prepare() {
       maxPlayer = this.lastMove.player;
       alpha = -Infinity;
       beta = Infinity;
       depth = maxPlayer.ai.depth;
     }
 
-    function moveAndScore(row, col) {
+    function rateMove(row, col) {
       var score = this.copy().makeMove(row, col).getMoveMinimaxScore(
           maxPlayer, alpha, beta, depth - 1);
       if (isMax) alpha = Math.max(alpha, score);
@@ -239,23 +234,23 @@ State.prototype = {
       return alpha >= beta;
     }
 
-    if (arguments.length < 4) prepareFirstCall.call(this);
+    if (arguments.length < 4) prepare.call(this);
     if (depth <= 0 || this.findWin('some') || this.isTie())
       return this.getMoveHeuristicScore(maxPlayer.ai.score) *
           (maxPlayer === this.lastMove.player ? 1 : -1) *
           (depth / rule.turnsPerRound + 1);
-    this.visitEmptyCells(this.spiralOrder, moveAndScore);
+    this.visitEmptyCells(this.spiralOrder, rateMove);
     return isMax ? alpha : beta;
 
   },
 
   findNextBestMoves: function() {
 
-    var scores,
+    var scores = getEmptyCellsScores(this),
         tolerance = this.getCurrentPlayer().ai.tolerance,
         priority = ['minimax', 'heuristic'];
 
-    function getAllCellsScores(self) {
+    function getEmptyCellsScores(self) {
       return self.field.reduce(function(result, row, i) {
         return result.concat(row.map(function(cell, j) {
           var deepState = self.copy();
@@ -274,12 +269,12 @@ State.prototype = {
       }));
     }
 
-    scores = getAllCellsScores(this);
     priority.forEach(function(prop) {
       var max = maxOfProperties(prop) - tolerance;
       scores = scores.filter(function(val) { return val[prop] >= max; });
     });
     return scores;
+
   }
 
 };
