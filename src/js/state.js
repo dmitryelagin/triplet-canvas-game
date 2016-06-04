@@ -16,8 +16,8 @@ State = function(source) {
     this.lastMove = source.lastMove;
     this.players = source.players;
     this.orders = source.orders;
-    this.field = this.fill(function(i, j) {
-      return source.field[i][j];
+    this.field = this.fill(function(row, col) {
+      return source.field[row][col];
     });
   } else {
     this.turn = 0;
@@ -253,7 +253,7 @@ State.prototype = {
       var max = Math.max.apply(null, scores.map(function(o) {
         return o.score[i];
       })) - tolerance;
-      return scores.filter(function(val) { return val[i] >= max; });
+      return scores.filter(function(val) { return val.score[i] >= max; });
     }
 
     function rateCell(row, col) {

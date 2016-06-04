@@ -17,9 +17,8 @@ onmessage = (function() {
       answer.lastMove = state.lastMove;
       answer.wins = state.findWin();
       answer.tie = state.isTie();
-      answer.terminate = answer.wins.some(function(val) {
-        return val !== undefined;
-      }) || answer.tie;
+      answer.terminate = answer.tie ||
+          answer.wins.some(function(val) { return val; });
     }
     if (e.data.advice)
       answer.bestMove = random.item(state.findNextBestMoves()) || null;

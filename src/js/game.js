@@ -69,7 +69,7 @@ Game.prototype = {
     console.log('time: ' + message.data.aiSpeed);
     if (message.data.bestMove) {
       this.tryMove(message.data.bestMove);
-      console.log('minimax score: ' + message.data.bestMove.minimax);
+      console.log('minimax score: ' + message.data.bestMove.score[0]);
     }
     else this.action(message.data);
   },
@@ -86,8 +86,12 @@ Game.prototype = {
       if (result.player.isUser) {
         this.userTurn = true;
         console.log('User turn.');  // Ask user to make turn without console
+      } else if (result.bestMove !== null) {
+        this.state.postMessage({ advice: true });
+      } else {
+        this.state.terminate();
+        throw new Error('Worker failed and was terminated. Restart app.');
       }
-      else this.state.postMessage({ advice: true });
     } else {
       this.state.postMessage(0);
     }
