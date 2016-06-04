@@ -1,9 +1,6 @@
 // TODO Try to add depth for only win search
 // TODO Maybe add players externally
-// TODO Return win from findWin method as object instead of array
-// TODO Optimize minimax to be more effective
-// TODO Make all other orders
-// TODO Refactor findNextBestMoves method for new makeMove returns
+// TODO Try to remove Array.prototype methods
 // Game state class
 TRIPLET.State = (function() {
 
@@ -42,20 +39,17 @@ State.prototype = {
 
   // Initialize methods
   fill: function(filler) {
-    var i, j, field = [];
-    for (i = cfg.rows; i--;) {
-      field[i] = [];
-      for (j = cfg.columns; j--;) field[i][j] = filler(i, j);
-    }
+    var row, col, field = [];
+    while (field.push([]) <= cfg.rows) {}
+    for (row = cfg.rows; row--;)
+      for (col = cfg.columns; col--;)
+        field[row][col] = filler(row, col);
     return field;
   },
 
   makeNormalOrder: function() {
-    var row, col, result = [];
-    for (row = 0; row < cfg.rows; row++)
-      for (col = 0; col < cfg.columns; col++)
-        result.push([row, col]);
-    return result;
+    function getRowCol(e, i) { return [~~(i / cfg.columns), i % cfg.columns]; }
+    return Array.apply(null, Array(cfg.maxTurns)).map(getRowCol);
   },
 
   makeSpiralOrder: (function() {
@@ -106,9 +100,7 @@ State.prototype = {
   },
 
   visitCells: function(order, fn, filter) {
-    var i;
-    filter = filter || function() { return true; };
-    for (i = order.length; i--;)
+    for (var i = order.length; i--;)
       if (filter.apply(this, order[i]) && fn.apply(this, order[i])) return true;
   },
 
@@ -134,8 +126,7 @@ State.prototype = {
 
       function getInlineCells(lim, dirR, dirC, counter) {
         var nextRow = row + dirR * counter,
-            nextCol = col + dirC * counter,
-            i;
+            nextCol = col + dirC * counter, i;
         if (this.cellInRange(nextRow, nextCol))
           for (i = 0; i < codes.length; i++)
             if (this.field[nextRow][nextCol] === codes[i] && lim[i]-- > 0)
@@ -147,8 +138,10 @@ State.prototype = {
         var lim = limits.slice(),
             len0 = getInlineCells.call(this, lim, dir[0], dir[1], 0),
             len1 = getInlineCells.call(this, lim, -dir[0], -dir[1], 1) - 1;
-        if (len0 + len1 >= rule.winLength)
-          return [codes, limits, lim, len0, len1, dir];
+        if (len0 + len1 >= rule.winLength) return {
+          codes: codes, limits: limits, remainLim: lim,
+          lengths: [len0, len1], direction: dir
+        };
       }
 
       if (method !== 'map' && method !== 'some') method = 'map';
@@ -186,7 +179,6 @@ State.prototype = {
         lastPlayerID = this.lastMove.player.queue,
         playersCount = this.players.length,
         i, playerID;
-    scores = scores || this.lastMove.player.ai.score;
 
     function scoreSignsAround() {
       var codes = [playerID, rule.emptyVal, lastPlayerID],
@@ -195,8 +187,8 @@ State.prototype = {
       if (playerID === lastPlayerID) limits[2] = 0;
       probableWins = this.findWin(
           'map', codes, limits, this.lastMove.row, this.lastMove.col);
-      return probableWins.reduce(function(score, val) {
-        if (val) score += Math.pow(4, cfg.maxLineLength - val[2][0]) - 1;
+      return probableWins.reduce(function(score, win) {
+        if (win) score += Math.pow(4, cfg.maxLineLength - win.remainLim[0]) - 1;
         return score;
       }, 0);  // Long line should be scored higher than 4 short lines
     }
@@ -209,6 +201,7 @@ State.prototype = {
       }
     }
 
+    scores = scores || this.lastMove.player.ai.score;
     for (i = 0; i < playersCount; i++) {
       playerID = (lastPlayerID + i) % playersCount;
       if (this.findWin('some', [playerID, rule.emptyVal]))
@@ -252,33 +245,26 @@ State.prototype = {
 
   findNextBestMoves: function() {
 
-    var scores = getEmptyCellsScores(this),
-        tolerance = this.getCurrentPlayer().ai.tolerance,
-        priority = ['minimax', 'heuristic'];
+    var i, scoreTypes = 0,
+        scores = [],
+        tolerance = this.getCurrentPlayer().ai.tolerance;
 
-    function getEmptyCellsScores(self) {
-      return self.field.reduce(function(result, row, i) {
-        return result.concat(row.map(function(cell, j) {
-          var deepState = self.copy();
-          if (deepState.makeMove(i, j)) return {
-            row: i, col: j,
-            minimax: deepState.getMoveMinimaxScore(),
-            heuristic: deepState.getMoveHeuristicScore()
-          };
-        }));
-      }, []).filter(function(val) { return val; });
+    function findHighScore(i) {
+      var max = Math.max.apply(null, scores.map(function(o) {
+        return o.score[i];
+      })) - tolerance;
+      return scores.filter(function(val) { return val[i] >= max; });
     }
 
-    function maxOfProperties(prop) {
-      return Math.max.apply(null, scores.map(function(obj) {
-        return obj[prop];
-      }));
+    function rateCell(row, col) {
+      var deep = this.copy().makeMove(row, col),
+          score = [deep.getMoveMinimaxScore(), deep.getMoveHeuristicScore()];
+      if (!scoreTypes) scoreTypes = score.length;
+      scores.push({ row: row, col: col, score: score });
     }
 
-    priority.forEach(function(prop) {
-      var max = maxOfProperties(prop) - tolerance;
-      scores = scores.filter(function(val) { return val[prop] >= max; });
-    });
+    this.visitCells(this.orders.normal, rateCell, this.cellIsEmpty);
+    for (i = 0; i < scoreTypes; i++) scores = findHighScore(i);
     return scores;
 
   }
