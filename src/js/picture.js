@@ -1,6 +1,7 @@
 // Visualization constructor
 // TODO Lines length can be corrected via reducing frames.total
 // TODO Refactor sprite config objects
+// TODO All possible sprites should be pre-initialized
 TRIPLET.Picture = (function() {
 
   var cfg = TRIPLET.config.general,
@@ -61,6 +62,7 @@ TRIPLET.Picture = (function() {
         setTimeout(this.drawField.bind(this, lineID + 1), elem.line.pause);
         this.drawSprite(new Sprite({
           imgID: elem.line.random.imgID,
+          color: elem.line.color,
           frames: elem.line.frames,
           container: this.field,
           center: { x: line.x, y: line.y },
@@ -80,6 +82,7 @@ TRIPLET.Picture = (function() {
       cellCenter.y += elem.sign.random.move;
       this.drawSprite(new Sprite({
         imgID: elem.sign.random.imgID[player.signID],
+        color: player.color || elem.sign.color,
         frames: elem.sign.frames,
         container: this.field.cell,
         center: cellCenter,

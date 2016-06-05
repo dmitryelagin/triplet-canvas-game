@@ -1,5 +1,6 @@
 // Picture graphic element constructor
-// TODO Implement image colorization
+// TODO Colorization should trigger something when done because it is async
+// TODO Function should work if colorization failed
 TRIPLET.Sprite = (function() {
 
 var cfg = TRIPLET.config.general,
@@ -12,7 +13,9 @@ Sprite = function(setup) {
   var ratio;
 
   this.image = images[setup.imgID];
-  //this.colorize(setup.color || '000000');
+  try {
+    this.colorizeImage(setup.color || '#000');
+  } catch (err) {}
 
   ratio = Math.max(setup.container.width, setup.container.height) /
       Math.max(this.image.width, this.image.height) || 1;
@@ -31,7 +34,7 @@ Sprite = function(setup) {
   this.dx = -this.width / 2;
   this.dy = -this.height / 2;
 
-  Object.freeze(this);
+  //Object.freeze(this);
 
 };
 
@@ -39,38 +42,30 @@ Sprite.prototype = {
 
   constructor: TRIPLET.Sprite,
 
-  colorize: function(colorStr) {
+  colorizeImage: function(color) {
 
     var canvas = document.createElement('canvas'),
         context = canvas.getContext('2d'),
-        colorToSet = [
-          hex2int(colorStr.substr(0, 2)),  // Red
-          hex2int(colorStr.substr(2, 2)),  // Green
-          hex2int(colorStr.substr(4, 2))   // Blue
-        ],
-        i, imgData;
+        newImage = new Image(),
+        i, imgData, fillData;
+    canvas.width = this.image.width;
+    canvas.height = this.image.height;
 
-    function hex2int(str) {
-      return parseInt(str, 16) || 0;
-    }
+    context.drawImage(this.image, 0, 0);
+    imgData = context.getImageData(0, 0, canvas.width, canvas.height);
 
-    function makeImageData(img) {
-      img.crossOrigin = 'anonymous';
-      context.drawImage(img, 0, 0);
-      return context.getImageData(0, 0, img.width, img.height);
-    }
+    context.fillStyle = color;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    fillData = context.getImageData(0, 0, canvas.width, canvas.height);
 
-    function saveNewImage(self) {
-      var img = new Image();
-      context.putImageData(imgData, 0, 0);
-      img.src = canvas.toDataURL('image/png');
-      img.onload = function() { self.image = img; };
-    }
-
-    imgData = makeImageData(this.image);
     for (i = imgData.data.length; i--;)
-      if (i % 4 !== 3) imgData.data[i] = colorToSet[i % 4];
-    saveNewImage(this);
+      if (i % 4 === 3) fillData.data[i] = imgData.data[i];
+
+    context.putImageData(fillData, 0, 0);
+    newImage.src = canvas.toDataURL('image/png');
+    newImage.onload = (function() {
+      this.image = newImage;
+    }).bind(this);
 
   }
 

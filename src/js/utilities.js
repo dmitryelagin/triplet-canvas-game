@@ -1,3 +1,4 @@
+// TODO Maybe remove ObjectURL after worker is started
 // Support functions
 TRIPLET.utilities = {
 

@@ -14,8 +14,8 @@ TRIPLET.config = ({
   },
 
   players: [
-    { name: 'Alice', ai: 'none', signID: 'x', color: 'ff0000' },
-    { name: 'Bob', ai: 'hard', signID: 'o', color: '0000ff' }
+    { name: 'Alice', ai: 'none', signID: 'x', color: '#e44' },
+    { name: 'Bob', ai: 'normal', signID: 'o', color: '#35f' }
   ],
 
   element: {
@@ -25,6 +25,7 @@ TRIPLET.config = ({
         move: 10, rotate: 0.08, scale: 0.08
       },
       frames: { inRow: 1, total: 6, delay: 36 },
+      color: '#000',
       pause: 160
     },
     sign: {
@@ -33,6 +34,7 @@ TRIPLET.config = ({
         move: 8, rotate: 0.12, scale: 0.1
       },
       frames: { inRow: 1, total: 1, delay: 0 },
+      color: '#000',
       pause: 200
     }
   },
