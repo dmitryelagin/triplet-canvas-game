@@ -1,6 +1,5 @@
 // TODO Try to add depth for only win search
 // TODO Maybe add players externally
-// TODO Try to remove Array.prototype methods
 // Game state class
 TRIPLET.State = (function() {
 
