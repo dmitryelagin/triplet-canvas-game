@@ -39,12 +39,12 @@ TRIPLET.config = ({
 
   assets: {
     images: [
-      'https://dl.dropboxusercontent.com/s/9j33g7cq3ko49e7/line-0.png',
-      'https://dl.dropboxusercontent.com/s/647ml661puehig7/line-1.png',
-      'https://dl.dropboxusercontent.com/s/w56bvchfez107vg/line-2.png',
-      'https://dl.dropboxusercontent.com/s/wjfbvbevopp4fx1/line-3.png',
-      'https://dl.dropboxusercontent.com/s/wecnycckk5c3rij/signx_0.png',
-      'https://dl.dropboxusercontent.com/s/jfzgiqfaxe8q9al/signo_0.png'
+      'img/line-0.png',
+      'img/line-1.png',
+      'img/line-2.png',
+      'img/line-3.png',
+      'img/sign-x-0.png',
+      'img/sign-o-0.png'
     ]
   },
 
