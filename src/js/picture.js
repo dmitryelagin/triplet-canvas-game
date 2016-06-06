@@ -1,7 +1,7 @@
 // Visualization constructor
 // TODO Lines length can be corrected via reducing frames.total
 // TODO Refactor sprite config objects
-// TODO All possible sprites should be pre-initialized
+// TODO All possible sprites should be predefined
 TRIPLET.Picture = (function() {
 
 var cfg = TRIPLET.config.general,
