@@ -1,5 +1,6 @@
 // TODO Maybe merge general and rules
 // TODO Setting randomizers is untested
+// TODO Some values are changed for test, revert them later
 // Full config
 TRIPLET.config = ({
 
@@ -23,9 +24,9 @@ TRIPLET.config = ({
         imgID: [0, 1, 2, 3],
         move: 10, rotate: 0.08, scale: 0.08
       },
-      frames: { inRow: 1, total: 6, delay: 36 },
+      frames: { inRow: 1, total: 6, delay: 30 },  // delay 36
       color: '#000',
-      pause: 160
+      pause: 120  // pause 160
     },
     sign: {
       random: {
