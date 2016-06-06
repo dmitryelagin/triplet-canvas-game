@@ -1,5 +1,4 @@
 // Picture graphic element constructor
-// TODO Colorization should trigger something when done because it is async
 // TODO Function should work if colorization failed
 TRIPLET.Sprite = (function() {
 
@@ -14,7 +13,7 @@ Sprite = function(setup) {
 
   this.image = images[setup.imgID];
   try {
-    this.colorizeImage(setup.color || '#000');
+    this.changeColor(setup.color || '#000');
   } catch (err) {}
 
   ratio = Math.max(setup.container.width, setup.container.height) /
@@ -34,15 +33,15 @@ Sprite = function(setup) {
   this.dx = -this.width / 2;
   this.dy = -this.height / 2;
 
-  //Object.freeze(this);
+  Object.freeze(this);
 
 };
 
 Sprite.prototype = {
 
-  constructor: TRIPLET.Sprite,
+  constructor: Sprite,
 
-  colorizeImage: function(color) {
+  changeColor: function(color) {
 
     var canvas = document.createElement('canvas'),
         context = canvas.getContext('2d'),
@@ -63,9 +62,7 @@ Sprite.prototype = {
 
     context.putImageData(fillData, 0, 0);
     newImage.src = canvas.toDataURL('image/png');
-    newImage.onload = (function() {
-      this.image = newImage;
-    }).bind(this);
+    this.image = newImage;
 
   }
 

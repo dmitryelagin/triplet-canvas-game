@@ -15,7 +15,7 @@ TRIPLET.config = ({
 
   players: [
     { name: 'Alice', ai: 'none', signID: 'x', color: '#e44' },
-    { name: 'Bob', ai: 'normal', signID: 'o', color: '#35f' }
+    { name: 'Bob', ai: 'hard', signID: 'o', color: '#35f' }
   ],
 
   element: {
@@ -93,15 +93,12 @@ TRIPLET.config = ({
       }
     }
 
-    (function(cfg) {
+    (function(self, cfg, rule) {
       cfg.maxLineLength = Math.min(cfg.rows, cfg.columns);
       cfg.maxTurns = cfg.rows * cfg.columns;
-    })(this.general);
-
-    (function(self, rule) {
       rule.turnsPerRound = self.players.length * rule.signsPerRound;
-      rule.turnsForTie = rule.winLength * 2 - 1;
-    })(this, this.rules);
+      rule.minTurnsForTie = Math.max(cfg.rows, cfg.columns) * 2;
+    })(this, this.general, this.rules);
 
     (function(elem) {
       makeRandomizers(elem.line.random);

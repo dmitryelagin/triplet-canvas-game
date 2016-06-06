@@ -1,5 +1,4 @@
 // TODO Try to add depth for only win search
-// TODO Maybe add players externally
 // Game state class
 TRIPLET.State = (function() {
 
@@ -34,7 +33,7 @@ State = function(source) {
 
 State.prototype = {
 
-  constructor: TRIPLET.State,
+  constructor: State,
 
   // Initialize methods
   fill: function(filler) {
@@ -167,7 +166,7 @@ State.prototype = {
             [player.queue, rule.emptyVal], [rule.winLength, remains], row, col);
       }, this);
     }
-    return !(this.turn < rule.turnsForTie ||
+    return !(this.turn < rule.minTurnsForTie ||
         this.visitCells(this.orders.normal, somebodyCanWin, this.cellIsEmpty));
   },
 

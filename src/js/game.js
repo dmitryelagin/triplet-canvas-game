@@ -26,18 +26,19 @@ Game = function(id) {
   this.userTurn = false;
 
   function startGame() {
-    if (!--partsToLoad) {
-      self.picture.drawField();
-      self.canvas.addEventListener('click', self.onClick.bind(self));
-      self.action();
-    }
+    if (--partsToLoad) return;
+    self.picture.drawField();
+    self.canvas.addEventListener('click', self.onClick.bind(self));
+    self.action();
   }
 
   assets.images.load(cfg.assets.images, startGame);
-  this.state = ufn.makeWorker(worker, function() {
-    self.state.onmessage = self.respond.bind(self);
-    startGame();
-  }, 'js');
+  this.state = ufn.makeWorker({
+    code: worker,
+    onload: startGame,
+    handler: this.respond.bind(this),
+    importFrom: document.location.href.replace(/[^\/]*$/, '') + 'js' + '/'
+  });
 
   this.field = new Field();
   this.canvas = html.makeCanvas(
@@ -53,7 +54,7 @@ Game = function(id) {
 
 Game.prototype = {
 
-  constructor: TRIPLET.Game,
+  constructor: Game,
 
   onClick: function(event) {
     var coords = html.getClickCoords(event);
