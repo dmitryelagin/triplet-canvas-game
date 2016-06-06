@@ -28,24 +28,20 @@ onmessage = (function() {
     if (answer.terminate) close();
   }
 
+  function initialize(data) {
+    importScripts(data.href + 'utilities.js', data.href + 'config.js',
+                  data.href + 'player.js', data.href + 'state.js');
+    state = new TRIPLET.State();
+    random = TRIPLET.utilities.random;
+  }
+
   function init(e) {
-    var sub, href;
-    if (e.data.href) {
-      try {
-        sub = e.data.subFolder || '';
-        href = e.data.href.replace(/[^\/]*$/, '') +
-            sub.replace(/\\/g, '/').replace(/^\/|\/$/g, '') + '/';
-        importScripts(href + 'utilities.js', href + 'config.js',
-                      href + 'player.js', href + 'state.js');
-        state = new TRIPLET.State();
-        random = TRIPLET.utilities.random;
-        onmessage = handleMessage;
-        postMessage({ init: true });
-      } catch(err) {
-        postMessage({ init: false, error: err.message });
-      }
-    } else {
-      postMessage('Worker needs main file location: ' + e.data);
+    try {
+      initialize(e.data);
+      onmessage = handleMessage;
+      postMessage({ init: true });
+    } catch(err) {
+      postMessage({ init: false, error: err.message });
     }
   }
 

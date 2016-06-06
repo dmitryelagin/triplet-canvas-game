@@ -22,7 +22,7 @@ Player = function(setup, index) {
 
 Player.prototype = {
 
-  constructor: TRIPLET.Player,
+  constructor: Player,
 
   getTurnsCount: function(totalTurns) {
     var endedRoundsTurns =

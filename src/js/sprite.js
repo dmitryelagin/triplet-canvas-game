@@ -1,5 +1,5 @@
 // Picture graphic element constructor
-// TODO Implement image colorization
+// TODO Function should work if colorization failed
 TRIPLET.Sprite = (function() {
 
 var cfg = TRIPLET.config.general,
@@ -11,9 +11,10 @@ Sprite = function(setup) {
 
   var ratio;
 
-  this.image = (function(img) {
-    return img;
-  })(images[setup.imgID]);
+  this.image = images[setup.imgID];
+  try {
+    this.changeColor(setup.color || '#000');
+  } catch (err) {}
 
   ratio = Math.max(setup.container.width, setup.container.height) /
       Math.max(this.image.width, this.image.height) || 1;
@@ -33,6 +34,37 @@ Sprite = function(setup) {
   this.dy = -this.height / 2;
 
   Object.freeze(this);
+
+};
+
+Sprite.prototype = {
+
+  constructor: Sprite,
+
+  changeColor: function(color) {
+
+    var canvas = document.createElement('canvas'),
+        context = canvas.getContext('2d'),
+        newImage = new Image(),
+        i, imgData, fillData;
+    canvas.width = this.image.width;
+    canvas.height = this.image.height;
+
+    context.drawImage(this.image, 0, 0);
+    imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    context.fillStyle = color;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    fillData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    for (i = imgData.data.length; i--;)
+      if (i % 4 === 3) fillData.data[i] = imgData.data[i];
+
+    context.putImageData(fillData, 0, 0);
+    newImage.src = canvas.toDataURL('image/png');
+    this.image = newImage;
+
+  }
 
 };
 

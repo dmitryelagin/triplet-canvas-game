@@ -4,8 +4,8 @@
 // TODO Ask user to make turn without console
 // TODO Add some idle time for drawning field
 // TODO Maybe Field and Canvas should not be made here
-// TODO End game if bestMove is null
-// TODO Maybe partsToLoad should be dynamic number
+// TODO Maybe partsToLoad should be dynamic or private number
+// TODO Many values should be in config
 // Game main presenter
 TRIPLET.Game = (function() {
 
@@ -26,18 +26,19 @@ Game = function(id) {
   this.userTurn = false;
 
   function startGame() {
-    if (!--partsToLoad) {
-      self.picture.drawField();
-      self.canvas.addEventListener('click', self.onClick.bind(self));
-      self.action();
-    }
+    if (--partsToLoad) return;
+    self.picture.drawField();
+    self.canvas.addEventListener('click', self.onClick.bind(self));
+    self.action();
   }
 
   assets.images.load(cfg.assets.images, startGame);
-  this.state = ufn.makeWorker(worker, function() {
-    self.state.onmessage = self.respond.bind(self);
-    startGame();
-  }, 'js');
+  this.state = ufn.makeWorker({
+    code: worker,
+    onload: startGame,
+    handler: this.respond.bind(this),
+    importFrom: document.location.href.replace(/[^\/]*$/, '') + 'js' + '/'
+  });
 
   this.field = new Field();
   this.canvas = html.makeCanvas(
@@ -53,7 +54,7 @@ Game = function(id) {
 
 Game.prototype = {
 
-  constructor: TRIPLET.Game,
+  constructor: Game,
 
   onClick: function(event) {
     var coords = html.getClickCoords(event);
@@ -61,7 +62,7 @@ Game.prototype = {
       this.userTurn = false;
       this.tryMove(this.field.getCellPosition(coords.x, coords.y));
     } else {
-      // Ask user to wait or terminate
+      console.log('Please wait for your turn.');
     }
   },
 
@@ -85,7 +86,7 @@ Game.prototype = {
                               result.lastMove.player);
       if (result.player.isUser) {
         this.userTurn = true;
-        console.log('User turn.');  // Ask user to make turn without console
+        console.log('User turn.');
       } else if (result.bestMove !== null) {
         this.state.postMessage({ advice: true });
       } else {

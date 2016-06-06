@@ -1,6 +1,5 @@
 // TODO Maybe merge general and rules
 // TODO Setting randomizers is untested
-// TODO Minimax depth should be higher
 // Full config
 TRIPLET.config = ({
 
@@ -14,8 +13,8 @@ TRIPLET.config = ({
   },
 
   players: [
-    { name: 'Alice', ai: 'none', signID: 'x', color: 'ff0000' },
-    { name: 'Bob', ai: 'hard', signID: 'o', color: '0000ff' }
+    { name: 'Alice', ai: 'none', signID: 'x', color: '#e44' },
+    { name: 'Bob', ai: 'hard', signID: 'o', color: '#35f' }
   ],
 
   element: {
@@ -25,6 +24,7 @@ TRIPLET.config = ({
         move: 10, rotate: 0.08, scale: 0.08
       },
       frames: { inRow: 1, total: 6, delay: 36 },
+      color: '#000',
       pause: 160
     },
     sign: {
@@ -33,18 +33,19 @@ TRIPLET.config = ({
         move: 8, rotate: 0.12, scale: 0.1
       },
       frames: { inRow: 1, total: 1, delay: 0 },
+      color: '#000',
       pause: 200
     }
   },
 
   assets: {
     images: [
-      'https://dl.dropboxusercontent.com/s/9j33g7cq3ko49e7/line-0.png',
-      'https://dl.dropboxusercontent.com/s/647ml661puehig7/line-1.png',
-      'https://dl.dropboxusercontent.com/s/w56bvchfez107vg/line-2.png',
-      'https://dl.dropboxusercontent.com/s/wjfbvbevopp4fx1/line-3.png',
-      'https://dl.dropboxusercontent.com/s/wecnycckk5c3rij/signx_0.png',
-      'https://dl.dropboxusercontent.com/s/jfzgiqfaxe8q9al/signo_0.png'
+      'img/line-0.png',
+      'img/line-1.png',
+      'img/line-2.png',
+      'img/line-3.png',
+      'img/sign-x-0.png',
+      'img/sign-o-0.png'
     ]
   },
 
@@ -91,15 +92,12 @@ TRIPLET.config = ({
       }
     }
 
-    (function(cfg) {
+    (function(self, cfg, rule) {
       cfg.maxLineLength = Math.min(cfg.rows, cfg.columns);
       cfg.maxTurns = cfg.rows * cfg.columns;
-    })(this.general);
-
-    (function(self, rule) {
       rule.turnsPerRound = self.players.length * rule.signsPerRound;
-      rule.turnsForTie = rule.winLength * 2 - 1;
-    })(this, this.rules);
+      rule.minTurnsForTie = Math.max(cfg.rows, cfg.columns) * 2;
+    })(this, this.general, this.rules);
 
     (function(elem) {
       makeRandomizers(elem.line.random);

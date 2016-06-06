@@ -1,3 +1,4 @@
+// TODO Maybe remove ObjectURL after worker is started
 // Support functions
 TRIPLET.utilities = {
 
@@ -41,24 +42,22 @@ TRIPLET.utilities = {
 
   function: {
 
-    makeWorker: function(fn, onload, subFolder, href) {
+    makeWorker: function(cfg) {
       var worker;
-      if (typeof fn === 'function') {
+      function isFn(fn) { return typeof fn === 'function'; }
+      if (isFn(cfg.code)) {
         worker = new Worker(URL.createObjectURL(new Blob(
-            [fn.toString().replace(/.*?{\s*/, '').replace(/\s*}.*$/, '')],
+            [cfg.code.toString().replace(/.*?{\s*/, '').replace(/\s*}.*$/, '')],
             { type: 'javascript/worker' })));
         worker.onmessage = function(e) {
           if (e.data.init) {
-            worker.onmessage = function() {};
-            onload(worker);
+            if (isFn(cfg.handler)) worker.onmessage = cfg.handler;
+            if (isFn(cfg.onload)) cfg.onload(worker, e.data.args);
           } else {
             throw new Error('Worker can not be initialized: ' + e.data.error);
           }
         };
-        worker.postMessage({
-          href: typeof href === 'string' ? href : document.location.href,
-          subFolder: typeof subFolder === 'string' ? subFolder : ''
-        });
+        worker.postMessage({ href: cfg.importFrom || '', args: cfg.args });
         return worker;
       }
     }
