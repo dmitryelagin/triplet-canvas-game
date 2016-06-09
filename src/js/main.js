@@ -1,4 +1,9 @@
-$(document).ready(function() {
-  var games = [];
-  if (Modernizr.canvas) games.unshift(new TRIPLET.Game(games.length));
+// TODO Add RequireJS and maybe Modernizr
+// TODO Add multi-game feature
+import Game from './app/game';
+import $ from './lib/jquery';  // May not work
+
+$(document).ready(() => {
+  const games = [];
+  games.unshift(new Game(games.length));
 });

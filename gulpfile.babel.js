@@ -4,14 +4,14 @@ import babel from 'gulp-babel';
 import gulpIf from 'gulp-if';
 import del from 'del';
 
-const dirs = { src: 'src', dest: 'lib' };
+const dir = { src: 'src', dest: 'build', app: '/app' };
 
-gulp.task('build', () => gulp.src(`${dirs.src}/**/*.*`)
-    .pipe(gulpIf(file => file.extname.match(/(?:js|css)/), sourcemaps.init()))
-    .pipe(gulpIf(file => file.extname === '.js', babel()))
+gulp.task('build', () => gulp.src(`${dir.src}/**/*.*`)
+    .pipe(gulpIf(vf => vf.extname.match(/(?:js|css)/), sourcemaps.init()))
+    .pipe(gulpIf(vf => vf.extname === '.js' && vf.dirname === dir.app, babel()))
     .pipe(sourcemaps.write())
-    .pipe(gulp.dest(dirs.dest)));
+    .pipe(gulp.dest(dir.dest)));
 
-gulp.task('clear', () => del(dirs.dest));
+gulp.task('clear', () => del(dir.dest));
 
 gulp.task('default', gulp.series('clear', 'build'));
