@@ -37,8 +37,8 @@ export default class Game {
     this.field = new Field();
     this.canvas = html.makeCanvas(
         `triplet-${id}`,
-        cfg.general.left + cfg.general.right + this.field.width,
-        cfg.general.top + cfg.general.bottom + this.field.height,
+        cfg.left + cfg.right + this.field.width,
+        cfg.top + cfg.bottom + this.field.height,
         document.getElementsByTagName('body')[0]);
     this.picture = new Picture(this.field, this.canvas);
 
