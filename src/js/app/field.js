@@ -7,7 +7,6 @@ export default class Field {
 
   constructor() {
     const cellSize = Math.min(cfg.size / cfg.columns, cfg.size / cfg.rows);
-
     this.width = cellSize * cfg.columns;
     this.height = cellSize * cfg.rows;
     this.cell = { width: cellSize, height: cellSize };
@@ -50,7 +49,6 @@ export default class Field {
 
     this.lines.visible =
         this.lines.ver.slice(1, -1).concat(this.lines.hor.slice(1, -1));
-
     Object.freeze(this);
   }
 
@@ -64,12 +62,9 @@ export default class Field {
     const horizontal = new Line({ x, y, angle: 0 });
     const vertical = new Line({ x, y, angle: Math.PI / 2 });
     function getPosition(lines, ruler) {
-      const lineID = lines.findIndex(ln => {
-        // Can be refactored better
-        const point = ln.intersects(ruler);
-        return point.x > x || point.y > y;
-      });
-      return ~lineID ? lineID : lines.length;
+      const dotBeforeLine = lines.findIndex(ln =>
+        (point => point.x > x || point.y > y)(ln.intersects(ruler)));
+      return ~dotBeforeLine ? dotBeforeLine : lines.length;
     }
     return {
       row: getPosition(this.lines.hor.slice(1, -1), vertical),

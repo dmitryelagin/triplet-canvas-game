@@ -1,57 +1,46 @@
-// TODO Delete distance method if not needed
-// TODO Maybe rewrite constructor and bisector method to keep angle in PI range
 // Lines constructor, using slope–intercept form for setup
-TRIPLET.Line = (function() {
+export default class Line {
 
-var Line = function(setup) {
-  this.angle = parseFloat(setup.angle) % (Math.PI * 2) || 0;
-  this.x = parseFloat(setup.x) || 0;
-  this.y = parseFloat(setup.y) || 0;
-  this.a = Math.tan(this.angle);
-  this.b = -1;
-  this.c = this.y - this.a * this.x;
-  Object.freeze(this);
-};
+  constructor({ x = 0, y = 0, angle = 0 }) {
+    this.angle = parseFloat(angle) % (Math.PI * 2);
+    this.x = parseFloat(x);
+    this.y = parseFloat(y);
+    this.a = Math.tan(this.angle);
+    this.b = -1;
+    this.c = this.y - this.a * this.x;
+    if (Object.keys(this).every(p => Number.isFinite(this[p]))) {
+      Object.freeze(this);
+    } else throw new Error(`Wrong line setup: ${x} / ${y} / ${angle}`);
+  }
 
-Line.isLine = function(line) {
-  if (line instanceof Line) return line;
-  throw new TypeError('Argument is not instance of Line: ' + line);
-};
+  static isLine(line) {
+    if (line instanceof this.constructor) return line;
+    throw new TypeError(`Argument is not instance of Line: ${line}`);
+  }
 
-Line.prototype = {
+  distanceFrom(x = 0, y = 0) {
+    const { a, b, c } = this;
+    const distance = (a * x + b * y + c) / Math.sqrt(a ** 2 + b ** 2);
+    if (Number.isFinite(distance)) return distance;
+    throw new Error(`Wrong point coordinates: ${x} / ${y}`);
+  }
 
-  constructor: TRIPLET.Line,
+  intersects(line, accuracy = 8) {
+    this.constructor.isLine(line);
+    const divider = this.a * line.b - line.a * this.b;
+    return divider === 0 ? null : {
+      x: -((this.c * line.b - line.c * this.b) / divider).toFixed(accuracy),
+      y: -((this.a * line.c - line.a * this.c) / divider).toFixed(accuracy),
+    };
+  }
 
-  distanceFrom: function(x, y) {
-    var distance = (this.a * x + this.b * y + this.c) /
-        Math.sqrt(Math.pow(this.a, 2) + Math.pow(this.b, 2));
-    if (typeof distance === 'number' && !isNaN(distance)) return distance;
-    throw new TypeError('Wrong point coordinates: ' + x + ' / ' + y);
-  },
-
-  intersects: function(line, accuracy) {
-    var divider;
-    Line.isLine(line);
-    accuracy = accuracy || 8;
-    divider = this.a * line.b - line.a * this.b;
-    if (divider !== 0)
-      return {
-        x: -((this.c * line.b - line.c * this.b) / divider).toFixed(accuracy),
-        y: -((this.a * line.c - line.a * this.c) / divider).toFixed(accuracy)
-      };
-  },
-
-  getBisector: function(line) {
-    Line.isLine(line);
+  getBisector(line) {
+    this.constructor.isLine(line);
     return new Line({
       x: (this.x + line.x) / 2,
       y: (this.y + line.y) / 2,
-      angle: (this.angle + line.angle) / 2
+      angle: (this.angle + line.angle) / 2,
     });
   }
 
-};
-
-return Line;
-
-})();
+}

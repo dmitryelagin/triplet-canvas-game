@@ -1,4 +1,3 @@
-// TODO Maybe remove ObjectURL after worker is started
 // Support functions
 export const props = {
 
@@ -15,7 +14,7 @@ export const props = {
 export const random = {
 
   get sign() {
-    return Math.sign(Math.random() - 0.5);
+    return Math.sign(Math.random() - 0.5) || 1;
   },
 
   error(range) {
