@@ -64,12 +64,12 @@ export default class Field {
     const horizontal = new Line({ x, y, angle: 0 });
     const vertical = new Line({ x, y, angle: Math.PI / 2 });
     function getPosition(lines, ruler) {
-      let dot;
-      let i = 0;
-      do {
-        dot = lines[i].intersects(ruler);
-      } while (dot.x <= x && dot.y <= y && ++i < lines.length);
-      return i;
+      const lineID = lines.findIndex(ln => {
+        // Can be refactored better
+        const point = ln.intersects(ruler);
+        return point.x > x || point.y > y;
+      });
+      return ~lineID ? lineID : lines.length;
     }
     return {
       row: getPosition(this.lines.hor.slice(1, -1), vertical),
