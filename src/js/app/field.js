@@ -1,82 +1,71 @@
 // TODO Remove this.canvas if not needed
 // Field constructor
-TRIPLET.Field = (function() {
+import { general as cfg, elements as elem } from './config';
+import Line from './line';
 
-var cfg = TRIPLET.config.general,
-    elem = TRIPLET.config.element,
-    Line = TRIPLET.Line,
-    Field;
+export default class Field {
 
-Field = function() {
+  constructor() {
+    const cellSize = Math.min(cfg.size / cfg.columns, cfg.size / cfg.rows);
 
-  var cellSize = Math.min(cfg.size / cfg.columns, cfg.size / cfg.rows);
-
-  this.width = cellSize * cfg.columns;
-  this.height = cellSize * cfg.rows;
-  this.cell = { width: cellSize, height: cellSize };
-  this.canvas = {
-    width: cfg.left + this.width + cfg.right,
-    height: cfg.top + this.height + cfg.bottom
-  };
-
-  this.lines = (function(self) {
-
-    function linesFactory(count, getCfg) {
-      var i, lineCfg, storage = [];
-      for (i = 0; i <= count; i++) {
-        lineCfg = getCfg(i);
-        if (i !== 0 && i !== count) {
-          lineCfg.x += elem.line.random.move;
-          lineCfg.y += elem.line.random.move;
-          lineCfg.angle += elem.line.random.rotate;
-        }
-        storage.push(new Line(lineCfg));
-      }
-      return storage;
-    }
-
-    return {
-      hor: linesFactory(cfg.rows, function(index) {
-        return {
-          x: cfg.left + self.width / 2,
-          y: cfg.top + self.cell.height * index,
-          angle: 0
-        };
-      }),
-      ver: linesFactory(cfg.columns, function(index) {
-        return {
-          x: cfg.left + self.cell.width * index,
-          y: cfg.top + self.height / 2,
-          angle: Math.PI / 2
-        };
-      })
+    this.width = cellSize * cfg.columns;
+    this.height = cellSize * cfg.rows;
+    this.cell = { width: cellSize, height: cellSize };
+    this.canvas = {
+      width: cfg.left + this.width + cfg.right,
+      height: cfg.top + this.height + cfg.bottom,
     };
 
-  })(this);
+    this.lines = (() => {
+      function randomize({ x, y, angle }) {
+        return {
+          x: x + elem.line.random.move,
+          y: y + elem.line.random.move,
+          angle: angle + elem.line.random.rotate,
+        };
+      }
 
-  this.lines.visible = (function(ln) {
-    return ln.ver.slice(1, -1).concat(ln.hor.slice(1, -1));
-  })(this.lines);
+      function linesFactory(count, getLineCfg) {
+        const storage = [];
+        for (let i = 0; i <= count; i++) {
+          storage.push(new Line(
+              i % count === 0 ? getLineCfg(i) : randomize(getLineCfg(i))));
+        }
+        return storage;
+      }
 
-  Object.freeze(this);
+      return {
+        hor: linesFactory(cfg.rows, index => ({
+          x: cfg.left + this.width / 2,
+          y: cfg.top + this.cell.height * index,
+          angle: 0,
+        })),
+        ver: linesFactory(cfg.columns, index => ({
+          x: cfg.left + this.cell.width * index,
+          y: cfg.top + this.height / 2,
+          angle: Math.PI / 2,
+        })),
+      };
+    })();
 
-};
+    this.lines.visible =
+        this.lines.ver.slice(1, -1).concat(this.lines.hor.slice(1, -1));
 
-Field.prototype = {
+    Object.freeze(this);
+  }
 
-  constructor: TRIPLET.Field,
-
-  getCellCenter: function(row, col) {
-    var rowCenter = this.lines.hor[row].getBisector(this.lines.hor[row + 1]),
-        colCenter = this.lines.ver[col].getBisector(this.lines.ver[col + 1]);
+  getCellCenter(row, col) {
+    const rowCenter = this.lines.hor[row].getBisector(this.lines.hor[row + 1]);
+    const colCenter = this.lines.ver[col].getBisector(this.lines.ver[col + 1]);
     return rowCenter.intersects(colCenter);
-  },
+  }
 
-  getCellPosition: function(x, y) {
-    var horizontal = new Line({ x: x, y: y, angle: 0 });
-        vertical = new Line({ x: x, y: y, angle: Math.PI / 2 });
+  getCellPosition(x, y) {
+    const horizontal = new Line({ x, y, angle: 0 });
+    const vertical = new Line({ x, y, angle: Math.PI / 2 });
     function getPosition(lines, ruler) {
-      var dot, i = 0;
+      let dot;
+      let i = 0;
       do {
         dot = lines[i].intersects(ruler);
       } while (dot.x <= x && dot.y <= y && ++i < lines.length);
@@ -84,12 +73,8 @@ Field.prototype = {
     }
     return {
       row: getPosition(this.lines.hor.slice(1, -1), vertical),
-      col: getPosition(this.lines.ver.slice(1, -1), horizontal)
+      col: getPosition(this.lines.ver.slice(1, -1), horizontal),
     };
   }
 
-};
-
-return Field;
-
-})();
+}
