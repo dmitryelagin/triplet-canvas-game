@@ -1,28 +1,21 @@
-// Visualization constructor
 // TODO Lines length can be corrected via reducing frames.total
 // TODO Refactor sprite config objects
 // TODO All possible sprites should be predefined
-TRIPLET.Picture = (function() {
+// Visualization constructor
+import { general as cfg, elements as elem } from './config';
+import { random } from './utilities';
+import Sprite from './sprite';
 
-var cfg = TRIPLET.config.general,
-    random = TRIPLET.utilities.random,
-    elem = TRIPLET.config.element,
-    Sprite = TRIPLET.Sprite,
-    Picture;
+export default class Picture {
 
-Picture = function(field, canvas) {
-  this.field = field;
-  this.canvas = canvas;
-  this.context = this.canvas.getContext('2d');
-  this.sprites = [];
-};
+  constructor(field, canvas) {
+    this.field = field;
+    this.canvas = canvas;
+    this.context = this.canvas.getContext('2d');
+    this.sprites = [];
+  }
 
-Picture.prototype = {
-
-  constructor: Picture,
-
-  drawSprite: function(sprite) {
-
+  drawSprite(sprite) {
     function clearCanvas() {
       this.context.setTransform(1, 0, 0, 1, 0, 0);
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -45,19 +38,19 @@ Picture.prototype = {
           sp.height);
     }
 
-    if (!(sprite instanceof Sprite))
-      throw new TypeError('Argument is not Sprite: ' + sprite);
+    if (!(sprite instanceof Sprite)) {
+      throw new TypeError(`Argument is not a sprite: ${sprite}`);
+    }
     if (!~sprite.frames.current) this.sprites.push(sprite);
-    if (sprite.frames.total - 1 > ++sprite.frames.current)
+    if (sprite.frames.next()) {
       setTimeout(this.drawSprite.bind(this, sprite), sprite.frames.delay);
+    }
     clearCanvas.call(this);
     this.sprites.forEach(draw, this);
+  }
 
-  },
-
-  drawField: function(lineID) {
-    lineID = lineID || 0;
-    var line = this.field.lines.visible[lineID];
+  drawField(lineID = 0) {
+    const line = this.field.lines.visible[lineID];
     if (line) {
       setTimeout(this.drawField.bind(this, lineID + 1), elem.line.pause);
       this.drawSprite(new Sprite({
@@ -68,16 +61,16 @@ Picture.prototype = {
         center: { x: line.x, y: line.y },
         angle: line.angle,
         scale: {
-          width: random.sign() + elem.line.random.scale,
-          height: random.sign() * cfg.defaultRowsCols /
-              Math.max(cfg.rows, cfg.columns) + elem.line.random.scale
-        }
+          width: random.sign + elem.line.random.scale,
+          height: random.sign * cfg.defaultRowsCols /
+              Math.max(cfg.rows, cfg.columns) + elem.line.random.scale,
+        },
       }));
     }
-  },
+  }
 
-  drawSign: function(row, col, player) {
-    var cellCenter = this.field.getCellCenter(row, col);
+  drawSign(row, col, player) {
+    const cellCenter = this.field.getCellCenter(row, col);
     cellCenter.x += elem.sign.random.move;
     cellCenter.y += elem.sign.random.move;
     this.drawSprite(new Sprite({
@@ -88,14 +81,10 @@ Picture.prototype = {
       center: cellCenter,
       angle: elem.sign.random.rotate,
       scale: {
-        width: random.sign() + elem.sign.random.scale,
-        height: random.sign() + elem.sign.random.scale
-      }
+        width: random.sign + elem.sign.random.scale,
+        height: random.sign + elem.sign.random.scale,
+      },
     }));
   }
 
-};
-
-return Picture;
-
-})();
+}

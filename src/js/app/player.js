@@ -1,40 +1,27 @@
-// TODO Throw exeption if there is no signID
-// TODO Clean constructor in the end
-// TODO isUser flag and ai setup are ugly
+// TODO Maybe throw exeption if there is no signID
 // Player constructor
-TRIPLET.Player = (function() {
+import { general as cfg, ai as aiCfg } from './config';
 
-var cfg = TRIPLET.config.general,
-    rule = TRIPLET.config.rules,
-    ai = TRIPLET.config.ai,
-    Player;
+export default class Player {
 
-Player = function(setup, index) {
-  if (!(this instanceof Player)) return new Player(setup, index);
-  this.queue = parseInt(index, 10);
-  this.signID = setup.signID;
-  this.name = setup.name || 'Player';
-  this.color = setup.color || '000000';
-  this.isUser = !setup.ai || setup.ai === 'none';
-  this.ai = this.isUser ? ai.none : ai[setup.ai];
-  this.maxTurns = this.getTurnsCount(cfg.maxTurns);
-};
-
-Player.prototype = {
-
-  constructor: Player,
-
-  getTurnsCount: function(totalTurns) {
-    var endedRoundsTurns =
-            ~~(totalTurns / rule.turnsPerRound) * rule.signsPerRound,
-        thisRoundTurns =
-            totalTurns % rule.turnsPerRound - rule.signsPerRound * this.queue;
-    return endedRoundsTurns +
-        Math.max(0, Math.min(rule.signsPerRound, thisRoundTurns));
+  constructor({ signImg = 'x', color = '#444', ai = 'none' }, id) {
+    if (!Number.isInteger(id)) throw new TypeError(`Bad player ID: ${id}`);
+    this.queue = id;
+    this.signImg = signImg;
+    this.color = color;
+    this.ai = aiCfg[ai] || aiCfg.none;
+    this.isUser = this.ai === aiCfg.none;
+    this.maxTurns = this.getTurnsCount(cfg.maxTurns);
+    Object.freeze(this);
   }
 
-};
+  getTurnsCount(totalTurns) {
+    const endedRoundsTurns =
+            ~~(totalTurns / cfg.turnsPerRound) * cfg.signsPerRound;
+    const thisRoundTurns =
+            totalTurns % cfg.turnsPerRound - cfg.signsPerRound * this.queue;
+    return endedRoundsTurns +
+        Math.max(0, Math.min(cfg.signsPerRound, thisRoundTurns));
+  }
 
-return Player;
-
-})();
+}

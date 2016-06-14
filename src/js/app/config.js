@@ -2,7 +2,7 @@
 // TODO Setting randomizers is untested
 // TODO Some values are changed for test, revert them later
 // Full config
-import random from './utilities';
+import { random } from './utilities';
 
 const general = {
   defaultRowsCols: 3, emptyVal: 9,

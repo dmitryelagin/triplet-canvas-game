@@ -23,11 +23,9 @@ class Storage {
 
 }
 
-export default {
-  images: new Storage((link, onSuccess, onFail) => {
-    const img = new Image();
-    img.src = link;
-    img.onload = () => { onSuccess(img); };
-    img.onerror = () => { onFail(link); };
-  }),
-};
+export const images = new Storage((link, onSuccess, onFail) => {
+  const img = new Image();
+  img.src = link;
+  img.onload = () => { onSuccess(img); };
+  img.onerror = () => { onFail(link); };
+});

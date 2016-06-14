@@ -8,7 +8,7 @@
 // TODO Many string values should be in config
 // Game main presenter
 import { general as cfg, assets as links } from './config';
-import assets from './assets';
+import { images } from './assets';
 import workerFn from './worker';
 import { worker, html } from './utilities';
 import Field from './field';
@@ -26,7 +26,7 @@ export default class Game {
     };
     this.userTurn = false;
 
-    assets.images.load(links.images, startGame);
+    images.load(links.images, startGame);
     this.state = worker.fromFn({
       code: workerFn,
       onload: startGame,
