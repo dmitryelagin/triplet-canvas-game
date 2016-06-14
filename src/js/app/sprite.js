@@ -8,11 +8,6 @@ export default class Sprite {
     this.image = images[setup.imgID];
     const ratio = Math.max(setup.container.width, setup.container.height) /
         Math.max(this.image.width, this.image.height) || 1;
-    try {
-      this.changeColor(setup.color || '#000');
-    } catch (err) {
-      // Continue regardless of error
-    }
 
     this.angle = parseFloat(setup.angle) || 0;
     this.center = props.fromTo(setup.center, { x: 0, y: 0 });
@@ -35,6 +30,9 @@ export default class Sprite {
     this.dx = -this.width / 2;
     this.dy = -this.height / 2;
 
+    try {
+      this.changeColor(setup.color || '#000');
+    } catch (err) { /* Continue regardless of error */ }
     Object.freeze(this);
   }
 
@@ -50,8 +48,9 @@ export default class Sprite {
     context.fillRect(0, 0, canvas.width, canvas.height);
     const fill = context.getImageData(0, 0, canvas.width, canvas.height);
 
-    // for (let i = img.data.length; i--;) if (i % 4 === 3) fill.data[i] = img.data[i];
-    img.data.forEach((val, i) => { if (i % 4 === 3) fill.data[i] = val; });
+    for (let i = img.data.length; i--;) {
+      if (i % 4 === 3) fill.data[i] = img.data[i];
+    }
 
     context.putImageData(fill, 0, 0);
     const newImage = new Image();
