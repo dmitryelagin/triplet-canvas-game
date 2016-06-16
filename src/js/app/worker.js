@@ -5,7 +5,7 @@ import { random } from './utilities';
 import State from './state';
 
 export default function worker() {
-  onmessage = (() => {
+  self.onmessage = (() => {
     let state;
 
     function handleMessage(e) {
@@ -26,7 +26,7 @@ export default function worker() {
     }
 
     function initialize(href) {
-      importScripts(
+      self.importScripts(
           `${href}utilities.js`, `${href}config.js`,
           `${href}player.js`, `${href}state.js`);
       state = new State();
@@ -35,7 +35,7 @@ export default function worker() {
     function init(e) {
       try {
         initialize(e.data.href);
-        onmessage = handleMessage;
+        self.onmessage = handleMessage;
         postMessage({ init: true });
       } catch (err) {
         postMessage({ init: false, error: err.message });
