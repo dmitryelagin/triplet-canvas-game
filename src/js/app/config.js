@@ -15,6 +15,11 @@ const players = [
   { name: 'Bob', ai: 'hard', signID: 'o', color: '#35f' },
 ];
 
+general.maxLineLength = Math.min(general.rows, general.columns);
+general.maxTurns = general.rows * general.columns;
+general.turnsPerRound = players.length * general.signsPerRound;
+general.minTurnsForTie = Math.max(general.rows, general.columns) * 2;
+
 const elements = {
   line: {
     random: {
@@ -33,36 +38,6 @@ const elements = {
     frames: { inRow: 1, total: 1, delay: 0 },
     color: '#000',
     pause: 200,
-  },
-};
-
-const assets = {
-  images: [
-    'img/line-0.png', 'img/line-1.png', 'img/line-2.png',
-    'img/line-3.png', 'img/sign-x-0.png', 'img/sign-o-0.png',
-  ],
-};
-
-const ai = {
-  none: {
-    score: {
-      sign: { own: 0, enemy: 0, mainEnemy: 0 }, win: 0, tie: 0,
-    }, depth: 0, tolerance: 0,
-  },
-  hard: {
-    score: {
-      sign: { own: 6, enemy: 4, mainEnemy: 5 }, win: 100000, tie: 100,
-    }, depth: 5, tolerance: 5,
-  },
-  normal: {
-    score: {
-      sign: { own: 5, enemy: 5, mainEnemy: 5 }, win: 10000, tie: 50,
-    }, depth: 3, tolerance: 10,
-  },
-  easy: {
-    score: {
-      sign: { own: 5, enemy: 5, mainEnemy: 5 }, win: 100, tie: 10,
-    }, depth: 1, tolerance: 30,
   },
 };
 
@@ -86,9 +61,34 @@ function makeRandomizers(obj) {
 makeRandomizers(elements.line.random);
 makeRandomizers(elements.sign.random);
 
-general.maxLineLength = Math.min(general.rows, general.columns);
-general.maxTurns = general.rows * general.columns;
-general.turnsPerRound = players.length * general.signsPerRound;
-general.minTurnsForTie = Math.max(general.rows, general.columns) * 2;
+const assets = {
+  images: [
+    'img/line-0.png', 'img/line-1.png', 'img/line-2.png',
+    'img/line-3.png', 'img/sign-x-0.png', 'img/sign-o-0.png',
+  ],
+};
+
+const ai = {
+  none: {
+    score: { sign: [0, 0, 0], win: 0, tie: 0 }, depth: 0, tolerance: 0,
+  },
+  hard: {
+    score: { sign: [6, 5, 4], win: 100000, tie: 100 }, depth: 5, tolerance: 5,
+  },
+  normal: {
+    score: { sign: [6, 5], win: 10000, tie: 50 }, depth: 3, tolerance: 10,
+  },
+  easy: {
+    score: { sign: [5], win: 100, tie: 10 }, depth: 1, tolerance: 30,
+  },
+};
+
+Object.keys(ai).forEach(p => {
+  if (ai[p].score.sign.length < players.length) {
+    const last = ai[p].score.sign.pop();
+    ai[p].score.sign = ai[p].score.sign.concat(
+        Array(players.length - ai[p].score.sign.length).fill(last));
+  }
+});
 
 export { general, players, elements, assets, ai };

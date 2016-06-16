@@ -6,20 +6,20 @@ export default class Player {
 
   constructor({ signImg = 'x', color = '#444', ai = 'none' }, id) {
     if (!Number.isInteger(id)) throw new TypeError(`Bad player ID: ${id}`);
-    this.queue = id;
+    this.id = id;
     this.signImg = signImg;
     this.color = color;
     this.ai = aiCfg[ai] || aiCfg.none;
     this.isUser = this.ai === aiCfg.none;
-    this.maxTurns = this.getTurnsCount(cfg.maxTurns);
+    this.maxTurns = this.countTurns(cfg.maxTurns);
     Object.freeze(this);
   }
 
-  getTurnsCount(totalTurns) {
+  countTurns(totalTurns) {
     const endedRoundsTurns =
-            ~~(totalTurns / cfg.turnsPerRound) * cfg.signsPerRound;
+        ~~(totalTurns / cfg.turnsPerRound) * cfg.signsPerRound;
     const thisRoundTurns =
-            totalTurns % cfg.turnsPerRound - cfg.signsPerRound * this.queue;
+        totalTurns % cfg.turnsPerRound - cfg.signsPerRound * this.id;
     return endedRoundsTurns +
         Math.max(0, Math.min(cfg.signsPerRound, thisRoundTurns));
   }

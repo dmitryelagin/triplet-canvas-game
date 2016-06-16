@@ -57,9 +57,9 @@ export default class Game {
 
   respond(message) {
     console.log(`time: ${message.data.aiSpeed}`);
-    if (message.data.bestMove) {
-      this.tryMove(message.data.bestMove);
-      console.log(`minimax score: ${message.data.bestMove.score[0]}`);
+    if (message.data.aiMove) {
+      this.tryMove(message.data.aiMove);
+      console.log(`minimax score: ${message.data.aiMove.score[0]}`);
     } else {
       this.action(message.data);
     }
@@ -78,8 +78,8 @@ export default class Game {
       if (result.player.isUser) {
         this.userTurn = true;
         console.log('User turn.');
-      } else if (result.bestMove !== null) {
-        this.state.postMessage({ advice: true });
+      } else if (result.aiMove !== null) {
+        this.state.postMessage({ ai: true });
       } else {
         this.state.terminate();
         throw new Error('Worker failed and was terminated. Restart app.');

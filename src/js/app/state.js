@@ -1,274 +1,207 @@
 // TODO Try to add depth for only win search
 // Game state class
-TRIPLET.State = (function() {
+import { general as cfg, players } from './config';
+import Player from './player';
 
-var cfg = TRIPLET.config.general,
-    rule = TRIPLET.config.rules,
-    players = TRIPLET.config.players,
-    Player = TRIPLET.Player,
-    State;
+const ORDER_SPIRAL_N_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
+const WINS_DIRECTIONS = [[0, 1], [1, 0], [-1, 1], [1, 1]];
+const DEFAULT_LIMITS = [Infinity, 0];
 
-State = function(source) {
-  if (source instanceof State) {
-    this.turn = source.turn;
-    this.lastMove = source.lastMove;
-    this.players = source.players;
-    this.orders = source.orders;
-    this.field = this.fill(function(row, col) {
-      return source.field[row][col];
-    });
-  } else {
-    this.turn = 0;
-    this.lastMove = {};
-    this.players = players.map(Player);
-    this.orders = {
-      normal: this.makeNormalOrder().reverse(),
-      spiral: this.makeSpiralOrder().reverse()
-    };
-    this.field = this.fill(function() {
-      return rule.emptyVal;
-    });
+export default class State {
+
+  constructor(source) {
+    if (source instanceof this.constructor) {
+      this.turn = source.turn;
+      this.lastMove = source.lastMove;
+      this.players = source.players;
+      this.field = this.fillField((row, col) => source.field[row][col]);
+      this.orders = source.orders;
+    } else {
+      this.turn = 0;
+      this.lastMove = {};
+      this.players = players.map((...args) => new Player(...args));
+      this.field = this.fillField(() => cfg.emptyVal);
+      this.orders = {
+        normal: this.normalOrder.reverse(),
+        spiral: this.spiralOrder.reverse(),
+      };
+    }
   }
-};
-
-State.prototype = {
-
-  constructor: State,
 
   // Initialize methods
-  fill: function(filler) {
-    var row, col, field = [];
-    while (field.push([]) <= cfg.rows) {}
-    for (row = cfg.rows; row--;)
-      for (col = cfg.columns; col--;)
-        field[row][col] = filler(row, col);
+  fillField(filler) {
+    const field = [];
+    while (field.push([]) < cfg.rows) { /* Do nothing */ }
+    for (let row = cfg.rows; row--;) {
+      for (let col = cfg.columns; col--;) field[row][col] = filler(row, col);
+    }
     return field;
-  },
+  }
 
-  makeNormalOrder: function() {
-    function getRowCol(e, i) { return [~~(i / cfg.columns), i % cfg.columns]; }
-    return Array.apply(null, Array(cfg.maxTurns)).map(getRowCol);
-  },
+  get normalOrder() {
+    return Array(cfg.maxTurns).fill(0).map((e, i) =>
+        [~~(i / cfg.columns), i % cfg.columns]);
+  }
 
-  makeSpiralOrder: (function() {
-
-    var ORDER_SPIRAL_N_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
-
-    return function() {
-      var row = ~~(cfg.rows / 2),
-          col = ~~(cfg.columns / 2),
-          result = [],
-          vector,
-          turns = 0, straight = 0, beforeTurn = 0, searched = 0;
-      while (searched < cfg.maxTurns) {
-        if (this.cellInRange(row, col)) {
-          result.push([row, col]);
-          searched++;
-        }
-        vector = turns % 4;
-        row += ORDER_SPIRAL_N_CCW[vector][0];
-        col += ORDER_SPIRAL_N_CCW[vector][1];
-        if (beforeTurn-- === 0) {
-          turns++;
-          beforeTurn = straight;
-          if (vector % 2 === 0) straight++;
-        }
+  get spiralOrder() {
+    const result = [];
+    let vector;
+    let [row, col] = [~~(cfg.rows / 2), ~~(cfg.columns / 2)];
+    let [turns, straight, beforeTurn, searched] = [0, 0, 0, 0];
+    while (searched < cfg.maxTurns) {
+      if (this.cellInRange(row, col)) {
+        result.push([row, col]);
+        searched++;
       }
-      return result;
-    };
-
-  })(),
+      vector = turns % 4;
+      row += ORDER_SPIRAL_N_CCW[vector][0];
+      col += ORDER_SPIRAL_N_CCW[vector][1];
+      if (beforeTurn-- === 0) {
+        turns++;
+        beforeTurn = straight;
+        if (vector % 2 === 0) straight++;
+      }
+    }
+    return result;
+  }
 
   // General methods
-  copy: function() {
+  get copy() {
     return new State(this);
-  },
+  }
 
-  getCurrentPlayer: function() {
-    return this.players[~~(this.turn / rule.signsPerRound) %
+  get currentPlayer() {
+    return this.players[~~(this.turn / cfg.signsPerRound) %
         this.players.length];
-  },
+  }
 
-  cellInRange: function(row, col) {
+  cellInRange(row, col) {
     return row >= 0 && row < cfg.rows && col >= 0 && col < cfg.columns;
-  },
+  }
 
-  cellIsEmpty: function(row, col) {
-    return this.field[row][col] === rule.emptyVal;
-  },
+  cellIsEmpty(row, col) {
+    return this.field[row][col] === cfg.emptyVal;
+  }
 
-  visitCells: function(order, fn, filter) {
+  visitEmptyCells(order, fn) {
     for (var i = order.length; i--;)
-      if (filter.apply(this, order[i]) && fn.apply(this, order[i])) return true;
-  },
+      if (this.cellIsEmpty(...order[i]) && fn.apply(this, order[i]))
+        return true;
+  }
 
-  makeMove: function(row, col) {
+  makeMove(row, col) {
     if (this.cellIsEmpty(row, col) && this.cellInRange(row, col)) {
-      this.lastMove = {
-        row: row, col: col,
-        player: this.getCurrentPlayer()
-      };
-      this.field[row][col] = this.lastMove.player.queue;
+      this.lastMove = { row, col, player: this.currentPlayer };
+      this.field[row][col] = this.lastMove.player.id;
       this.turn++;
       return this;
     }
-  },
+    return null;
+  }
 
   // Find win or tie methods
-  findWin: (function() {
+  findWin(method = 'map', codes = [this.lastMove.player.id, cfg.emptyVal],
+      limits = DEFAULT_LIMITS,
+      row = this.lastMove.row, col = this.lastMove.col) {
+    const remainLim = limits.slice();
 
-    var DIRECTIONS = [[0, 1], [1, 0], [-1, 1], [1, 1]],
-        DEFAULT_LIMITS = [Infinity, 0];
-
-    return function(method, codes, limits, row, col) {
-
-      function getInlineCells(lim, dirR, dirC, counter) {
-        var nextRow = row + dirR * counter,
-            nextCol = col + dirC * counter, i;
-        if (this.cellInRange(nextRow, nextCol))
-          for (i = 0; i < codes.length; i++)
-            if (this.field[nextRow][nextCol] === codes[i] && lim[i]-- > 0)
-              return getInlineCells.call(this, lim, dirR, dirC, counter + 1);
-        return counter;
+    function getInlineCells(dirR, dirC, counter) {
+      const nextRow = row + dirR * counter;
+      const nextCol = col + dirC * counter;
+      if (this.cellInRange(nextRow, nextCol)) {
+        for (let i = 0; i < codes.length; i++) {
+          if (this.field[nextRow][nextCol] === codes[i] && remainLim[i]-- > 0) {
+            return getInlineCells.call(this, dirR, dirC, counter + 1);
+          }
+        }
       }
-
-      function getWinLine(dir) {
-        var lim = limits.slice(),
-            len0 = getInlineCells.call(this, lim, dir[0], dir[1], 0),
-            len1 = getInlineCells.call(this, lim, -dir[0], -dir[1], 1) - 1;
-        if (len0 + len1 >= rule.winLength) return {
-          codes: codes, limits: limits, remainLim: lim,
-          lengths: [len0, len1], direction: dir
-        };
-      }
-
-      if (method !== 'map' && method !== 'some') method = 'map';
-      if (!Array.isArray(codes))
-        codes = [this.lastMove.player.queue, rule.emptyVal];
-      if (!Array.isArray(limits)) limits = DEFAULT_LIMITS;
-      if (!this.cellInRange(row, col)) {
-        row = this.lastMove.row;
-        col = this.lastMove.col;
-      }
-      if (codes.length === limits.length)
-        return DIRECTIONS[method](getWinLine, this);
-      throw new Error('Wrong findWin method initialization.');
-
-    };
-
-  })(),
-
-  isTie: function() {
-    function somebodyCanWin(row, col) {
-      return this.players.some(function canWin(player) {
-        var remains = player.maxTurns - player.getTurnsCount(this.turn);
-        return this.findWin('some',
-            [player.queue, rule.emptyVal], [rule.winLength, remains], row, col);
-      }, this);
+      return counter;
     }
-    return !(this.turn < rule.minTurnsForTie ||
-        this.visitCells(this.orders.normal, somebodyCanWin, this.cellIsEmpty));
-  },
+
+    return WINS_DIRECTIONS[method](dir => {
+      const len0 = getInlineCells.call(this, dir[0], dir[1], 0);
+      const len1 = getInlineCells.call(this, -dir[0], -dir[1], 1) - 1;
+      return len0 + len1 < cfg.winLength ? null : {
+        dir, codes, limits, remainLim, lengths: [len0, len1],
+      };
+    });
+  }
+
+  get isTie() {
+    function somebodyCanWin(...cell) {
+      return this.players.some(p => this.findWin('some', [p.id, cfg.emptyVal],
+          [cfg.winLength, p.maxTurns - p.countTurns(this.turn)], ...cell));
+    }
+    return !(this.turn < cfg.minTurnsForTie ||
+        this.visitEmptyCells(this.orders.normal, somebodyCanWin));
+  }
 
   // Simple heuristics
-  getMoveHeuristicScore: function(scores) {
+  scoreMoveHeuristic(scores = this.lastMove.player.ai.score) {
+    const { row, col, player: { id: lastPlayerID } } = this.lastMove;
+    let score = 0;
+    let codes;
 
-    var score = 0,
-        lastPlayerID = this.lastMove.player.queue,
-        playersCount = this.players.length,
-        i, playerID;
-
+    // Long line should be scored higher than 4 short lines
     function scoreSignsAround() {
-      var codes = [playerID, rule.emptyVal, lastPlayerID],
-          limits = [cfg.maxLineLength, Infinity, 1],
-          probableWins;
-      if (playerID === lastPlayerID) limits[2] = 0;
-      probableWins = this.findWin(
-          'map', codes, limits, this.lastMove.row, this.lastMove.col);
-      return probableWins.reduce(function(score, win) {
-        if (win) score += Math.pow(4, cfg.maxLineLength - win.remainLim[0]) - 1;
-        return score;
-      }, 0);  // Long line should be scored higher than 4 short lines
-    }
-
-    function ratio(i) {
-      switch (i) {
-      case 0: return scores.sign.own;
-      case 1: return scores.sign.mainEnemy;
-      default: return scores.sign.enemy;
+      const limits = [cfg.maxLineLength, Infinity];
+      if (codes[0] !== lastPlayerID) {
+        codes.push(lastPlayerID);
+        limits.push(1);
       }
+      return this.findWin('map', codes, limits, row, col).reduce((scr, win) =>
+        (win ? scr + 4 ** (cfg.maxLineLength - win.remainLim[0]) - 1 : scr), 0);
     }
 
-    scores = scores || this.lastMove.player.ai.score;
-    for (i = 0; i < playersCount; i++) {
-      playerID = (lastPlayerID + i) % playersCount;
-      if (this.findWin('some', [playerID, rule.emptyVal]))
-        return scores.win * ratio(i);
-      score += scoreSignsAround.call(this) * ratio(i);
+    for (let i = 0; i < this.players.length; i++) {
+      codes = [(lastPlayerID + i) % this.players.length, cfg.emptyVal];
+      if (this.findWin('some', codes)) return scores.win * scores.sign[i];
+      score += scoreSignsAround.call(this) * scores.sign[i];
     }
-    if (this.isTie()) return scores.tie;
+    if (this.isTie) return scores.tie;
     return score;
-
-  },
+  }
 
   // NegaMax implementation with fail-soft alpha-beta pruning
-  getMoveMinimaxScore: function(maxPlayer, alpha, beta, depth) {
-
-    var isMax = maxPlayer === this.getCurrentPlayer();
-
-    function prepare() {
-      maxPlayer = this.lastMove.player;
-      alpha = -Infinity;
-      beta = Infinity;
-      depth = maxPlayer.ai.depth;
-    }
+  scoreMoveMinimax(maxPlayer = this.lastMove.player,
+      a = -Infinity, b = Infinity, depth = maxPlayer.ai.depth) {
+    const isMax = maxPlayer === this.currentPlayer;
+    let alpha = a;
+    let beta = b;
 
     function rateMove(row, col) {
-      var score = this.copy().makeMove(row, col).getMoveMinimaxScore(
-          maxPlayer, alpha, beta, depth - 1);
+      const score = this.copy.makeMove(row, col)
+          .scoreMoveMinimax(maxPlayer, alpha, beta, depth - 1);
       if (isMax) alpha = Math.max(alpha, score);
       else beta = Math.min(beta, score);
       return alpha >= beta;
     }
 
-    if (arguments.length < 4) prepare.call(this);
-    if (depth <= 0 || this.findWin('some') || this.isTie())
-      return this.getMoveHeuristicScore(maxPlayer.ai.score) *
-          (maxPlayer === this.lastMove.player ? 1 : -1) *
-          (depth / rule.turnsPerRound + 1);
-    this.visitCells(this.orders.spiral, rateMove, this.cellIsEmpty);
+    if (depth <= 0 || this.findWin('some') || this.isTie) {
+      const sign = maxPlayer === this.lastMove.player ? 1 : -1;
+      const speed = depth / cfg.turnsPerRound + 1;
+      return this.scoreMoveHeuristic(maxPlayer.ai.score) * sign * speed;
+    }
+    this.visitEmptyCells(this.orders.spiral, rateMove);
     return isMax ? alpha : beta;
-
-  },
-
-  findNextBestMoves: function() {
-
-    var i, scoreTypes = 0,
-        scores = [],
-        tolerance = this.getCurrentPlayer().ai.tolerance;
-
-    function findHighScore(i) {
-      var max = Math.max.apply(null, scores.map(function(o) {
-        return o.score[i];
-      })) - tolerance;
-      return scores.filter(function(val) { return val.score[i] >= max; });
-    }
-
-    function rateCell(row, col) {
-      var deep = this.copy().makeMove(row, col),
-          score = [deep.getMoveMinimaxScore(), deep.getMoveHeuristicScore()];
-      if (!scoreTypes) scoreTypes = score.length;
-      scores.push({ row: row, col: col, score: score });
-    }
-
-    this.visitCells(this.orders.normal, rateCell, this.cellIsEmpty);
-    for (i = 0; i < scoreTypes; i++) scores = findHighScore(i);
-    return scores;
-
   }
 
-};
+  get nextBestMoves() {
+    const scoreTypes = ['scoreMoveMinimax', 'scoreMoveHeuristic'];
+    let moves = [];
 
-return State;
+    function rateCell(row, col) {
+      const deep = this.copy.makeMove(row, col);
+      moves.push({ row, col, score: scoreTypes.map(type => deep[type]()) });
+    }
 
-})();
+    this.visitEmptyCells(this.orders.normal, rateCell);
+    for (let i = 0; i < scoreTypes.length; i++) {
+      const max = Math.max(...moves.map(cell => cell.score[i]));
+      moves = moves.filter(cell =>
+          cell.score[i] >= max - this.currentPlayer.ai.tolerance);
+    }
+    return moves;
+  }
+
+}
