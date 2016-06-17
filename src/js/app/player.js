@@ -3,10 +3,10 @@
 define(['./config'], ({ general: cfg, ai: aiCfg }) =>
   class Player {
 
-    constructor({ signImg = 'x', color = '#444', ai = 'none' }, id) {
+    constructor({ signID = 'x', color = '#444', ai = 'none' }, id) {
       if (!Number.isInteger(id)) throw new TypeError(`Bad player ID: ${id}`);
       this.id = id;
-      this.signImg = signImg;
+      this.signID = signID;
       this.color = color;
       this.ai = aiCfg[ai] || aiCfg.none;
       this.isUser = this.ai === aiCfg.none;

@@ -15,7 +15,7 @@ define(() =>
     }
 
     static isLine(line) {
-      if (line instanceof this.constructor) return line;
+      if (line instanceof Line) return line;
       throw new TypeError(`Argument is not instance of Line: ${line}`);
     }
 
