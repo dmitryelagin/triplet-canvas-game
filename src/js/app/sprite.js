@@ -1,5 +1,5 @@
 // Picture graphic element constructor
-define(['./utilities', './assets'], ({ props }, { images }) =>
+define(['./utilities', './assets'], ({ props }, { images: { pool: images } }) =>
   class Sprite {
 
     constructor(setup) {

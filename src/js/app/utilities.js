@@ -34,21 +34,26 @@ define({
   },
 
   worker: {
-    fromFn({ code, handler, onload, importFrom: href = '', args }) {
+    fromFn({ code, handler, onload, href, amdCfg }) {
       const isFn = fn => typeof fn === 'function';
-      const url = URL.createObjectURL(new Blob([code]));
-      const wrkr = new Worker(url);
-      URL.revokeObjectURL(url);
-      wrkr.onmessage = e => {
-        if (e.data.init) {
-          if (isFn(handler)) wrkr.onmessage = handler;
-          if (isFn(onload)) onload(wrkr, e.data.args);
-        } else {
-          throw new Error(`Worker can not be initialized: ${e.data.error}`);
-        }
-      };
-      wrkr.postMessage({ href, args });
-      return wrkr;
+      if (isFn(code)) {
+        const url = URL.createObjectURL(new Blob(
+            [code.toString().replace(/.*?{\s*/, '').replace(/\s*}.*$/, '')],
+            { type: 'javascript/worker' }));
+        const wrkr = new Worker(url);
+        URL.revokeObjectURL(url);
+        wrkr.onmessage = e => {
+          if (e.data.init) {
+            if (isFn(handler)) wrkr.onmessage = handler;
+            if (isFn(onload)) onload(wrkr, e.data.args);
+          } else {
+            throw new Error(`Worker can not be initialized: ${e.data.error}`);
+          }
+        };
+        wrkr.postMessage({ href, amdCfg });
+        return wrkr;
+      }
+      return null;
     },
   },
 

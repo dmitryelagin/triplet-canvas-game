@@ -7,14 +7,15 @@
 // TODO Maybe partsToLoad should be dynamic or private number
 // TODO Many string values should be in config
 // Game main presenter
-define(['./config', './assets', './utilities', './field', './picture'], (
-    { general: cfg, assets: links }, { images }, { worker, html },
-    Field, Picture) =>
+define(
+    ['./config', './assets', './utilities', './worker', './field', './picture'],
+    ({ general: cfg, assets: links }, { images }, { worker, html }, code,
+        Field, Picture) =>
   class Game {
 
-    constructor(id = 0) {
+    constructor(id = 0, amdCfg) {
       let partsToLoad = 3;
-      const startGame = () => {
+      const tryToStartGame = () => {
         if (--partsToLoad) return;
         this.picture.drawField();
         this.canvas.addEventListener('click', this.onClick.bind(this));
@@ -22,12 +23,12 @@ define(['./config', './assets', './utilities', './field', './picture'], (
       };
       this.userTurn = false;
 
-      images.load(links.images, startGame);
-      this.state = worker.make({
-        file: 'worker.js',
-        onload: startGame,
+      images.load(links.images, tryToStartGame);
+      this.state = worker.fromFn({
+        code, amdCfg,
+        onload: tryToStartGame,
         handler: this.respond.bind(this),
-        importFrom: `${document.location.href.replace(/[^\/]*$/, '')}js/`,
+        href: document.location.href.replace(/[^\/]*$/, ''),
       });
 
       this.field = new Field();
@@ -38,7 +39,7 @@ define(['./config', './assets', './utilities', './field', './picture'], (
           document.getElementsByTagName('body')[0]);
       this.picture = new Picture(this.field, this.canvas);
 
-      startGame();
+      tryToStartGame();
     }
 
     onClick(e) {

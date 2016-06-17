@@ -1,10 +1,11 @@
 // TODO Add multi-game feature
-requirejs.config({
+const requireCfg = {
   baseUrl: 'js/lib',
   paths: { app: '../app' },
-});
+};
+requirejs.config(requireCfg);
 
 requirejs(['jquery', 'app/game'], ($, Game) => {
   const games = [];
-  games.unshift(new Game(games.length));
+  games.unshift(new Game(games.length, requireCfg));
 });

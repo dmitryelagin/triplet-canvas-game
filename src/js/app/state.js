@@ -153,7 +153,8 @@ define(['./config', './player'], ({
           limits.push(1);
         }
         return this.findWin('map', codes, limits, row, col).reduce((s, win) =>
-          (win ? s + 4 ** (maxLineLength - win.remainLim[0]) - 1 : s), 0);
+          // (win ? s + 4 ** (maxLineLength - win.remainLim[0]) - 1 : s), 0);
+          (win ? s + Math.pow(4, maxLineLength - win.remainLim[0]) - 1 : s), 0);
       }
 
       for (let i = 0; i < this.players.length; i++) {

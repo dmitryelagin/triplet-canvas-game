@@ -24,16 +24,22 @@ define(() =>
         if (reply.terminate) close();
       }
 
-      function initialize(href) {
-        self.importScripts(`${href}../lib/require.js`);
-        random = require(`${href}utilities.js`).random;
-        const State = require(`${href}state.js`);
-        state = new State();
+      function initialize(d) {
+        const baseUrl = d.href + d.amdCfg.baseUrl;
+        self.importScripts(`${baseUrl}/require.js`);
+        require.config(Object.assign({}, d.amdCfg, { baseUrl }));
+        require(
+            Object.assign({}, d.amdCfg, { baseUrl }),
+            ['app/utilities', 'app/state'],
+            ({ rnd }, State) => {
+              random = rnd;
+              state = new State();
+            });
       }
 
       function init(e) {
         try {
-          initialize(e.data.href);
+          initialize(e.data);
           self.onmessage = handleMessage;
           self.postMessage({ init: true });
         } catch (err) {
