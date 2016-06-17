@@ -1,9 +1,10 @@
-// TODO Add RequireJS and maybe Modernizr
 // TODO Add multi-game feature
-import Game from './app/game';
-import $ from './lib/jquery';  // May not work, should be tested
+requirejs.config({
+  baseUrl: 'js/lib',
+  paths: { app: '../app' },
+});
 
-$(document).ready(() => {
+requirejs(['jquery', 'app/game'], ($, Game) => {
   const games = [];
   games.unshift(new Game(games.length));
 });

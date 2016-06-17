@@ -1,48 +1,42 @@
 // Support functions
-export const props = {
+define({
 
-  fromTo(src, def) {
-    const obj = {};
-    Object.keys(def).forEach(p => {
-      obj[p] = typeof src[p] === typeof def[p] ? src[p] : def[p];
-    });
-    return obj;
+  props: {
+    fromTo(src, def) {
+      const obj = {};
+      Object.keys(def).forEach(p => {
+        obj[p] = typeof src[p] === typeof def[p] ? src[p] : def[p];
+      });
+      return obj;
+    },
   },
 
-};
+  random: {
+    get sign() {
+      return Math.sign(Math.random() - 0.5) || 1;
+    },
 
-export const random = {
+    error(range) {
+      return this.sign * Math.random() * (Math.abs(range) || 0);
+    },
 
-  get sign() {
-    return Math.sign(Math.random() - 0.5) || 1;
+    item(arr) {
+      return Array.isArray(arr) ? arr[~~(Math.random() * arr.length)] : null;
+    },
+
+    makeRandomizer(arg) {
+      switch (typeof arg) {
+        case 'undefined': return this.sign;
+        case 'number': return this.error.bind(this, arg);
+        default: return this.item.bind(this, arg);
+      }
+    },
   },
 
-  error(range) {
-    return this.sign * Math.random() * (Math.abs(range) || 0);
-  },
-
-  item(arr) {
-    return Array.isArray(arr) ? arr[~~(Math.random() * arr.length)] : null;
-  },
-
-  makeRandomizer(arg) {
-    switch (typeof arg) {
-      case 'undefined': return this.sign;
-      case 'number': return this.error.bind(this, arg);
-      default: return this.item.bind(this, arg);
-    }
-  },
-
-};
-
-export const worker = {
-
-  fromFn({ code, handler, onload, importFrom: href = '', args }) {
-    const isFn = fn => typeof fn === 'function';
-    if (isFn(code)) {
-      const url = URL.createObjectURL(new Blob(
-          [code.toString().replace(/^.*?{\s*|\s*}.*$/g, '')],
-          { type: 'javascript/worker' }));
+  worker: {
+    fromFn({ code, handler, onload, importFrom: href = '', args }) {
+      const isFn = fn => typeof fn === 'function';
+      const url = URL.createObjectURL(new Blob([code]));
       const wrkr = new Worker(url);
       URL.revokeObjectURL(url);
       wrkr.onmessage = e => {
@@ -55,30 +49,27 @@ export const worker = {
       };
       wrkr.postMessage({ href, args });
       return wrkr;
-    }
-    return null;
+    },
   },
 
-};
+  html: {
+    makeCanvas(id, width, height, parent) {
+      const canvas = document.createElement('canvas');
+      canvas.id = id;
+      canvas.width = width;
+      canvas.height = height;
+      canvas.innerText = 'Your browser does not support HTML5 Canvas.';
+      parent.appendChild(canvas);
+      return canvas;
+    },
 
-export const html = {
-
-  makeCanvas(id, width, height, parent) {
-    const canvas = document.createElement('canvas');
-    canvas.id = id;
-    canvas.width = width;
-    canvas.height = height;
-    canvas.innerText = 'Your browser does not support HTML5 Canvas.';
-    parent.appendChild(canvas);
-    return canvas;
+    clickCoords(event) {
+      const { left, top } = event.target.getBoundingClientRect();
+      return {
+        x: event.clientX - left,
+        y: event.clientY - top,
+      };
+    },
   },
 
-  clickCoords(event) {
-    const { left, top } = event.target.getBoundingClientRect();
-    return {
-      x: event.clientX - left,
-      y: event.clientY - top,
-    };
-  },
-
-};
+});
