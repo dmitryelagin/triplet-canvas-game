@@ -23,7 +23,8 @@ define(() =>
     distanceFrom(x = 0, y = 0) {
       const { a, b, c } = this;
       // const distance = (a * x + b * y + c) / Math.sqrt(a ** 2 + b ** 2);
-      const distance = (a * x + b * y + c) / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+      const distance = (a * x + b * y + c) /
+          Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
       if (Number.isFinite(distance)) return distance;
       throw new Error(`Wrong point coordinates: ${x} / ${y}`);
     }

@@ -38,7 +38,7 @@ define({
       const isFn = fn => typeof fn === 'function';
       if (isFn(code)) {
         const url = URL.createObjectURL(new Blob(
-            [code.toString().replace(/.*?{\s*/, '').replace(/\s*}.*$/, '')],
+            [code.toString().replace(/^.*?{\s*|\s*}.*$/g, '')],
             { type: 'javascript/worker' }));
         const wrkr = new Worker(url);
         URL.revokeObjectURL(url);

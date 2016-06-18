@@ -3,6 +3,7 @@
   "installedESLint": true,
   "rules": {
     "global-require": 0,
-    "import/no-amd": 0
+    "import/no-amd": 0,
+    "max-len": ["error", 80]
   }
 }

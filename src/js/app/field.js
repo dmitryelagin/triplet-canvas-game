@@ -54,9 +54,9 @@ define(['./config', './line'], ({
     }
 
     getCellCenter(row, col) {
-      const rowCenter = this.lines.hor[row].getBisector(this.lines.hor[row + 1]);
-      const colCenter = this.lines.ver[col].getBisector(this.lines.ver[col + 1]);
-      return rowCenter.intersects(colCenter);
+      const rowAxis = this.lines.hor[row].getBisector(this.lines.hor[row + 1]);
+      const colAxis = this.lines.ver[col].getBisector(this.lines.ver[col + 1]);
+      return rowAxis.intersects(colAxis);
     }
 
     getCellPosition(x, y) {

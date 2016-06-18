@@ -1,4 +1,5 @@
 // TODO Maybe throw exeption if there is no signID
+// TODO Maybe no need in exeptions at all
 // Player constructor
 define(['./config'], ({ general: cfg, ai: aiCfg }) =>
   class Player {

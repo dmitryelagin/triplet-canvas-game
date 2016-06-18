@@ -1,5 +1,6 @@
 // TODO Add ranges for settings
 // TODO Setting randomizers is untested
+// TODO Take settings from JSON
 // TODO Some values are changed for test, revert them later
 // Full config
 define(['./utilities'], ({ random }) => {

@@ -1,4 +1,5 @@
 // TODO Add attempt to retry asset downloading on error
+// TODO Check arguments and think of exeptions
 // Game assets storage
 class Storage {
 
