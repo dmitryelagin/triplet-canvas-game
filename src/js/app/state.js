@@ -1,4 +1,5 @@
 // TODO Try to add depth for only win search
+// TODO Refactor findWin and visitEmptyCells, they are ugly
 // Game state class
 define(['./config', './player'], ({
     general: {
@@ -82,14 +83,6 @@ define(['./config', './player'], ({
       return this.field[row][col] === emptyVal;
     }
 
-    visitEmptyCells(order, fn) {
-      for (let i = order.length; i--;) {
-        if (this.cellIsEmpty(...order[i]) && fn.apply(this, order[i])) {
-          return true;
-        }
-      }
-    }
-
     makeMove(row, col) {
       if (this.cellIsEmpty(row, col) && this.cellInRange(row, col)) {
         this.lastMove = { row, col, player: this.currentPlayer };
@@ -100,20 +93,28 @@ define(['./config', './player'], ({
       return null;
     }
 
+    visitEmptyCells(order, fn) {
+      for (let i = order.length; i--;) {
+        if (this.cellIsEmpty.apply(this, order[i]) && fn.apply(this, order[i])) {
+          return true;
+        }
+      }
+    }
+
     // Find win or tie methods
     findWin(method = 'map', codes = [this.lastMove.player.id, emptyVal],
         limits = [Infinity, 0],
         row = this.lastMove.row, col = this.lastMove.col) {
       const winsDirections = [[0, 1], [1, 0], [-1, 1], [1, 1]];
-      const remainLim = limits.slice();
+      let remain;
 
       function getInlineCells(dirR, dirC, counter) {
-        const nextRow = row + dirR * counter;
-        const nextCol = col + dirC * counter;
-        if (this.cellInRange(nextRow, nextCol)) {
+        // const [seqRow, seqCol] = [row + dirR * counter, col + dirC * counter];
+        const seqRow = row + dirR * counter;
+        const seqCol = col + dirC * counter;
+        if (this.cellInRange(seqRow, seqCol)) {
           for (let i = 0; i < codes.length; i++) {
-            if (this.field[nextRow][nextCol] === codes[i] &&
-                remainLim[i]-- > 0) {
+            if (this.field[seqRow][seqCol] === codes[i] && remain[i]-- > 0) {
               return getInlineCells.call(this, dirR, dirC, counter + 1);
             }
           }
@@ -122,18 +123,19 @@ define(['./config', './player'], ({
       }
 
       return winsDirections[method](dir => {
+        remain = limits.slice();
         const len0 = getInlineCells.call(this, dir[0], dir[1], 0);
         const len1 = getInlineCells.call(this, -dir[0], -dir[1], 1) - 1;
         return len0 + len1 < winLength ? null : {
-          dir, codes, limits, remainLim, lengths: [len0, len1],
+          dir, codes, limits, remain, lengths: [len0, len1],
         };
       });
     }
 
     get isTie() {
-      function somebodyCanWin(...cell) {
+      function somebodyCanWin(row, col) {
         return this.players.some(p => this.findWin('some', [p.id, emptyVal],
-            [winLength, p.maxTurns - p.countTurns(this.turn)], ...cell));
+            [winLength, p.maxTurns - p.countTurns(this.turn)], row, col));
       }
       return !(this.turn < minTurnsForTie ||
           this.visitEmptyCells(this.orders.normal, somebodyCanWin));
@@ -153,8 +155,8 @@ define(['./config', './player'], ({
           limits.push(1);
         }
         return this.findWin('map', codes, limits, row, col).reduce((s, win) =>
-          // (win ? s + 4 ** (maxLineLength - win.remainLim[0]) - 1 : s), 0);
-          (win ? s + Math.pow(4, maxLineLength - win.remainLim[0]) - 1 : s), 0);
+          // (win ? s + 4 ** (maxLineLength - win.remain[0]) - 1 : s), 0);
+          (win ? s + Math.pow(4, maxLineLength - win.remain[0]) - 1 : s), 0);
       }
 
       for (let i = 0; i < this.players.length; i++) {

@@ -1,5 +1,4 @@
 // TODO Refactor handleMessage function
-// TODO Later delete TRIPLET object making from here
 // Worker script for ai computing
 define(() =>
   function worker() {
@@ -24,25 +23,25 @@ define(() =>
         if (reply.terminate) close();
       }
 
-      function init(e) {
+      function assignGlobals({ random }, State) {
+        rand = random;
+        state = new State();
+      }
+
+      return function init(e) {
         try {
           const baseUrl = e.data.href + e.data.amdCfg.baseUrl;
           self.importScripts(`${baseUrl}/require.js`);
-          require(
-              Object.assign({}, e.data.amdCfg, { baseUrl }),
-              ['app/utilities', 'app/state'],
-              ({ random }, State) => {
-                rand = random;
-                state = new State();
-                self.onmessage = handleMessage;
-                self.postMessage({ init: true });
-              });
+          require.config(Object.assign({}, e.data.amdCfg, { baseUrl }));
+          require(['app/utilities', 'app/state'], (...args) => {
+            assignGlobals(...args);
+            self.onmessage = handleMessage;
+            self.postMessage({ init: true });
+          });
         } catch (err) {
           self.postMessage({ init: false, error: err.message });
         }
-      }
-
-      return init;
+      };
     })();
   }
 );
