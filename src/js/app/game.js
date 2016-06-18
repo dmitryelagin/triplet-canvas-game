@@ -6,6 +6,7 @@
 // TODO Maybe Field and Canvas should not be made here
 // TODO Maybe partsToLoad should be dynamic or private number
 // TODO Many string values should be in config
+// TODO Add end game functionality
 // Game main presenter
 define(
     ['./config', './assets', './utilities', './worker', './field', './picture'],

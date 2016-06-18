@@ -1,5 +1,6 @@
 // TODO Try to add depth for only win search
-// TODO Refactor findWin and visitEmptyCells, they are ugly
+// TODO Refactor findWin, it is ugly
+// TODO Ucomment exponentiation operator later
 // Game state class
 define(['./config', './player'], ({
     general: {
@@ -94,11 +95,12 @@ define(['./config', './player'], ({
     }
 
     visitEmptyCells(order, fn) {
-      for (let i = order.length; i--;) {
-        if (this.cellIsEmpty.apply(this, order[i]) && fn.apply(this, order[i])) {
-          return true;
-        }
+      let i = order.length;
+      while (i--) {
+        if (this.cellIsEmpty.apply(this, order[i]) &&
+            fn.apply(this, order[i])) break;
       }
+      return !!~i;
     }
 
     // Find win or tie methods
@@ -109,7 +111,6 @@ define(['./config', './player'], ({
       let remain;
 
       function getInlineCells(dirR, dirC, counter) {
-        // const [seqRow, seqCol] = [row + dirR * counter, col + dirC * counter];
         const seqRow = row + dirR * counter;
         const seqCol = col + dirC * counter;
         if (this.cellInRange(seqRow, seqCol)) {

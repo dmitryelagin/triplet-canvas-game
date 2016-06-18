@@ -1,3 +1,4 @@
+// TODO Ucomment exponentiation operator later
 // Lines class, using slope–intercept form for setup
 define(() =>
   class Line {
