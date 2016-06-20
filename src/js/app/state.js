@@ -44,7 +44,7 @@ define(['./config', './player'], ({
     }
 
     get spiralOrder() {
-      const orderSpiralNCCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
+      const ORDER_SPIRAL_N_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
       const result = [];
       let vector;
       let [row, col] = [~~(rows / 2), ~~(columns / 2)];
@@ -55,8 +55,8 @@ define(['./config', './player'], ({
           searched++;
         }
         vector = turns % 4;
-        row += orderSpiralNCCW[vector][0];
-        col += orderSpiralNCCW[vector][1];
+        row += ORDER_SPIRAL_N_CCW[vector][0];
+        col += ORDER_SPIRAL_N_CCW[vector][1];
         if (beforeTurn-- === 0) {
           turns++;
           beforeTurn = straight;
@@ -107,7 +107,7 @@ define(['./config', './player'], ({
     findWin(method = 'map', codes = [this.lastMove.player.id, emptyVal],
         limits = [Infinity, 0],
         row = this.lastMove.row, col = this.lastMove.col) {
-      const winsDirections = [[0, 1], [1, 0], [-1, 1], [1, 1]];
+      const WINS_DIRECTIONS = [[0, 1], [1, 0], [-1, 1], [1, 1]];
       let remain;
 
       function getInlineCells(dirR, dirC, counter) {
@@ -123,7 +123,7 @@ define(['./config', './player'], ({
         return counter;
       }
 
-      return winsDirections[method](dir => {
+      return WINS_DIRECTIONS[method](dir => {
         remain = limits.slice();
         const len0 = getInlineCells.call(this, dir[0], dir[1], 0);
         const len1 = getInlineCells.call(this, -dir[0], -dir[1], 1) - 1;

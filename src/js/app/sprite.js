@@ -4,8 +4,6 @@ define(['./utilities', './assets'], ({ props }, { images: { pool: images } }) =>
 
     constructor(setup) {
       this.image = images[setup.imgID];
-      const ratio = Math.max(setup.container.width, setup.container.height) /
-          Math.max(this.image.width, this.image.height) || 1;
 
       this.angle = parseFloat(setup.angle) || 0;
       this.center = props.fromTo(setup.center, { x: 0, y: 0 });
@@ -19,10 +17,13 @@ define(['./utilities', './assets'], ({ props }, { images: { pool: images } }) =>
           return hasNext;
         },
       });
-
       this.frames.width = this.image.width / this.frames.inRow;
       this.frames.height = this.image.height /
         Math.ceil(this.frames.total / this.frames.inRow);
+
+      const ratio = Math.max(setup.container.width, setup.container.height) /
+          Math.max(this.frames.width, this.frames.height) || 1;
+
       this.width = this.frames.width * ratio;
       this.height = this.frames.height * ratio;
       this.dx = -this.width / 2;
