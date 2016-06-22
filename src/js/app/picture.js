@@ -59,7 +59,7 @@ define(['./config', './utilities', './sprite'], (
           center: { x: ln.x, y: ln.y },
           angle: ln.angle,
           scale: {
-            width: random.sign + line.random.scale,
+            width: random.sign * 1 + line.random.scale,
             height: random.sign * cfg.defaultRowsCols /
                 Math.max(cfg.rows, cfg.columns) + line.random.scale,
           },

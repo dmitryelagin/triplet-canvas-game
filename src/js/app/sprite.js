@@ -1,3 +1,147 @@
+class Sprite {
+
+  constructor(builder) {
+    if (!(builder instanceof SpriteBuilder)) {
+      throw new Error(`Can not make sprite without builder: ${builder}`);
+    }
+    this.transformations = builder.transformations;
+    this.image = builder.image;  // This should be a copy?
+    this.frame = builder.frame;  // This should remember image index?
+    this.dimentions = builder.dimentions;
+    this.position = this.dimentions.map(d => -d / 2);
+    Object.freeze(this);
+  }
+
+  get drawArguments() {
+    return;
+  }
+
+}
+
+class SpriteBuilder {
+
+  // Add image selector
+  constructor(images) {
+    this.images = images.slice();
+    this.transform = {};
+  }
+
+  // Add colorizing function in arguments and body
+  colorize(color) {
+    const { width, height } = this.image;
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = width;
+    canvas.height = height;
+
+    context.drawImage(this.image, 0, 0);
+    const img = context.getImageData(0, 0, width, height);
+    context.fillStyle = color;
+    context.fillRect(0, 0, width, height);
+    const fill = context.getImageData(0, 0, width, height);
+
+    for (let i = img.data.length; i--;) {
+      if (i % 4 === 3) fill.data[i] = img.data[i];
+    }
+
+    context.putImageData(fill, 0, 0);
+    const newImage = new Image();
+    newImage.src = canvas.toDataURL('image/png');
+    this.image = newImage;
+    return this;
+  }
+
+  // Returns current image from images pool
+  get image() {
+
+  }
+
+  // FINISHED NEXT
+
+  get shot() {
+    return this.frame ? this.frame.next(false).value : this.image;
+  }
+
+  * framing(total = 1, inline = 1) {
+    const width = this.image.width / inline;
+    const height = this.image.height / Math.ceil(total / inline);
+    let current = 0;
+    while (current < total - 1) {
+      const x = width * (current % inline);
+      const y = height * ~~(current / inline);
+      const next = yield { x, y, width, height };
+      if (next !== false) current++;
+    }
+  }
+
+  crop(total, inline) {
+    this.frame = this.framing(total, inline);
+    return this;
+  }
+
+  delay(time = 0) {
+    this.delay = time;
+    return this;
+  }
+
+  get dimentions() {
+    const { width, height } = this.shot;
+    const ratio = this.maxSize / Math.max(width, height) || 1;
+    return [width * ratio, height * ratio];
+  }
+
+  set dimentions([type, sizes]) {
+    const size = Math[type](...sizes);
+    if (size) this.maxSize = size;
+  }
+
+  inscribe(...sizes) {
+    this.dimentions = ['min', sizes];
+    return this;
+  }
+
+  fit(...sizes) {
+    this.dimentions = ['max', sizes];
+    return this;
+  }
+
+  get transformations() {
+    const obj = {};
+    Object.entries(this.transform).forEach(([key, value]) => {
+      obj[key] = value.args.map(val => value.decorator(val));
+    });
+    return obj;
+  }
+
+  set transformations([type, args, decorator]) {
+    this.transform[type] = {
+      args: (Array.isArray(args) ? args : [args]).map(v => parseFloat(v) || 0),
+      decorator: typeof decorator === 'function' &&
+          typeof decorator(0) === 'number' ? decorator : val => val,
+    };
+  }
+
+  translate(args = [0, 0], decorator) {
+    this.transformations = ['translate', args, decorator];
+    return this;
+  }
+
+  scale(args = [1, 1], decorator) {
+    this.transformations = ['scale', args, decorator];
+    return this;
+  }
+
+  rotate(args = [0], decorator) {
+    this.transformations = ['rotate', args, decorator];
+    return this;
+  }
+
+  build() {
+    return new Sprite(this);
+  }
+
+}
+
 // Picture graphic element constructor
 define(['./utilities', './assets'], ({ props }, { images: { pool: images } }) =>
   class Sprite {
