@@ -1,3 +1,19 @@
+// Builder interface
+class SpriteBuilder {
+
+  colorize() {}
+  crop() {}
+  delay() {}
+  inscribe() {}
+  fit() {}
+  translate() {}
+  scale() {}
+  rotate() {}
+  build() {}
+
+}
+
+// Picture graphic element
 class Sprite {
 
   constructor(builder) {
@@ -13,15 +29,17 @@ class Sprite {
   }
 
   get drawArguments() {
-    return;
+
   }
 
 }
 
-class SpriteBuilder {
+// Builder for sprites
+class StandardSpriteBuilder extends SpriteBuilder {
 
   // Add image selector
   constructor(images) {
+    super();
     this.images = images.slice();
     this.transform = {};
   }
@@ -66,11 +84,11 @@ class SpriteBuilder {
     const width = this.image.width / inline;
     const height = this.image.height / Math.ceil(total / inline);
     let current = 0;
-    while (current < total - 1) {
+    for (;;) {
       const x = width * (current % inline);
       const y = height * ~~(current / inline);
       const next = yield { x, y, width, height };
-      if (next !== false) current++;
+      if (next !== false && current < total - 1) current++;
     }
   }
 
