@@ -1,5 +1,4 @@
 // TODO Add ranges for settings
-// TODO Setting randomizers is untested
 // TODO Take settings from JSON
 // Full config
 define(() => {
@@ -12,12 +11,11 @@ define(() => {
     defaultRowsCols: 3, emptyVal: 9,
     size: 420, rows: 5, columns: 5, signsPerRound: 1, winLength: 4,
     top: 20, right: 20, bottom: 20, left: 20,
+    get maxLineLength() { return Math.min(this.rows, this.columns); },
+    get maxTurns() { return this.rows * this.columns; },
+    get turnsPerRound() { return players.length * this.signsPerRound; },
+    get minTurnsForTie() { return Math.max(this.rows, this.columns) * 2; },
   };
-
-  general.maxLineLength = Math.min(general.rows, general.columns);
-  general.maxTurns = general.rows * general.columns;
-  general.turnsPerRound = players.length * general.signsPerRound;
-  general.minTurnsForTie = Math.max(general.rows, general.columns) * 2;
 
   const elements = {
     line: {
@@ -45,25 +43,26 @@ define(() => {
 
   const ai = {
     none: {
-      score: { sign: [0, 0, 0], win: 0, tie: 0 }, depth: 0, tolerance: 0,
+      depth: 0, tolerance: 0,
+      score: { sign: [0, 0, 0], win: 0, tie: 0 },
     },
     hard: {
-      score: { sign: [6, 5, 4], win: 100000, tie: 100 }, depth: 5, tolerance: 5,
+      depth: 5, tolerance: 5,
+      score: { sign: [6, 5, 4], win: 10000, tie: 100 },
     },
     normal: {
-      score: { sign: [6, 5], win: 10000, tie: 50 }, depth: 3, tolerance: 10,
+      depth: 3, tolerance: 10,
+      score: { sign: [6, 5], win: 1000, tie: 50 },
     },
     easy: {
-      score: { sign: [5], win: 100, tie: 10 }, depth: 1, tolerance: 30,
+      depth: 1, tolerance: 30,
+      score: { sign: [5], win: 100, tie: 10 },
     },
   };
 
   Object.keys(ai).forEach(p => {
-    if (ai[p].score.sign.length < players.length) {
-      const last = ai[p].score.sign.pop();
-      ai[p].score.sign = ai[p].score.sign.concat(
-          Array(players.length - ai[p].score.sign.length).fill(last));
-    }
+    const s = ai[p].score.sign;
+    ai[p].score.sign = Object.assign(Array(...players).fill(Math.min(...s)), s);
   });
 
   return { general, players, elements, assets, ai };
