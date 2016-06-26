@@ -1,6 +1,7 @@
 // TODO Lines length can be corrected via reducing frames.total
 // TODO Refactor sprite config objects
 // TODO All possible sprites should be predefined
+// TODO Functions in initialize method are ugly, maybe refactor them
 define(['./config', './utilities', './sprite'], (
     { general: cfg, players, elements: { line, sign } }, { random }, Sprite) =>
   // Visualization class
@@ -9,7 +10,7 @@ define(['./config', './utilities', './sprite'], (
     constructor(field, canvas) {
       this.field = field;
       this.canvas = canvas;
-      this.context = this.canvas.getContext('2d');
+      this.ctx = this.canvas.getContext('2d');
       this.sprites = new Set();
       this.builders = {};
     }
@@ -34,6 +35,7 @@ define(['./config', './utilities', './sprite'], (
             .modify(colorize.bind(null, line.color))
             .slice(line.frames.total, line.frames.inline)
             .fit(this.field.width, this.field.height)
+            .delay(1000 / line.frames.fps)
             .translate()
             .rotate()
             .scale(1, cfg.defaultRowsCols / Math.max(cfg.rows, cfg.columns),
@@ -44,6 +46,7 @@ define(['./config', './utilities', './sprite'], (
             .modify(colorize.bind(null, players[id].color || sign.color))
             .slice(sign.frames.total, sign.frames.inline)
             .fit(this.field.cell.width, this.field.cell.height)
+            .delay(1000 / sign.frames.fps)
             .translate(undefined, val => val + random.error(sign.random.move))
             .rotate(0, val => val + random.error(sign.random.rotate))
             .scale(1, 1,
@@ -52,22 +55,22 @@ define(['./config', './utilities', './sprite'], (
 
     drawSprite(sprite) {
       const clearCanvas = () => {
-        this.context.setTransform(1, 0, 0, 1, 0, 0);
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       };
 
       const draw = sp => {
-        this.context.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         sp.transformations.forEach((values, transformation) => (
-            this.context[transformation](...values)));
-        this.context.drawImage(...sp.drawArguments);
+            this.ctx[transformation](...values)));
+        this.ctx.drawImage(...sp.drawArguments);
       };
 
       if (sprite instanceof Sprite.Sprite) this.sprites.add(sprite);
       else throw new TypeError(`Argument is not a sprite: ${sprite}`);
       const done = sprite.nextFrame();
       if (!done) {
-        setTimeout(this.drawSprite.bind(this, sprite), 30);  // DELAY!
+        setTimeout(this.drawSprite.bind(this, sprite), sprite.timing);
         clearCanvas();
         this.sprites.forEach(draw);
       }

@@ -1,19 +1,18 @@
 // TODO Add ranges for settings
 // TODO Setting randomizers is untested
 // TODO Take settings from JSON
-// TODO Some values are changed for test, revert them later
 // Full config
 define(() => {
+  const players = [
+    { sign: 0, ai: 'none', color: [238, 68, 68] },
+    { sign: 1, ai: 'hard', color: [51, 85, 255] },
+  ];
+
   const general = {
     defaultRowsCols: 3, emptyVal: 9,
     size: 420, rows: 5, columns: 5, signsPerRound: 1, winLength: 4,
     top: 20, right: 20, bottom: 20, left: 20,
   };
-
-  const players = [
-    { sign: 0, ai: 'none', color: [238, 68, 68] },
-    { sign: 1, ai: 'hard', color: [51, 85, 255] },
-  ];
 
   general.maxLineLength = Math.min(general.rows, general.columns);
   general.maxTurns = general.rows * general.columns;
@@ -24,14 +23,14 @@ define(() => {
     line: {
       imgID: [[0, 1, 2, 3]],
       random: { move: 10, rotate: 0.08, scale: 0.08 },
-      frames: { total: 6, inline: 1, delay: 30 },  // delay 36
+      frames: { total: 6, inline: 1, fps: 30 },
       color: [0, 0, 0],
-      pause: 120,  // pause 160
+      pause: 160,
     },
     sign: {
       imgID: [[4], [5]],
       random: { move: 8, rotate: 0.12, scale: 0.1 },
-      frames: { total: 1, inline: 1, delay: 0 },
+      frames: { total: 1, inline: 1, fps: 30 },
       color: [0, 0, 0],
       pause: 200,
     },

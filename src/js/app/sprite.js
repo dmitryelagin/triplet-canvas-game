@@ -1,5 +1,4 @@
 // TODO Maybe implement opacity change
-// TODO Think about timing saving
 define(() => {
   // Builder interface
   class SpriteBuilder {}
@@ -16,6 +15,7 @@ define(() => {
       this.dimentions = builder.dimentions;
       this.position = this.dimentions.map(d => -d / 2);
       this.transformations = builder.transformations;
+      this.timing = builder.timing;
       this.frame = [];
     }
 
@@ -79,16 +79,6 @@ define(() => {
       return this;
     }
 
-    // FINISHED BEFORE
-
-    // Unfinished API
-    fps(count = 30) {
-      this.fps = count;
-      return this;
-    }
-
-    // FINISHED AFTER
-
     get shot() {
       return this.frames || this.images[0];
     }
@@ -108,6 +98,24 @@ define(() => {
       }
     }
 
+    get timing() {
+      return this.time || 0;
+    }
+
+    set timing(timing) {
+      this.time = Math.round(timing) || 0;
+    }
+
+    delay(time = 0) {
+      this.timing = time;
+      return this;
+    }
+
+    speed(time = 0) {
+      this.timing = time / (this.frames ? this.frames.total : 1);
+      return this;
+    }
+
     get dimentions() {
       const { width, height } = this.shot;
       const ratio = this.maxSize / Math.max(width, height) || 1;
@@ -115,7 +123,8 @@ define(() => {
     }
 
     set dimentions([type, sizes]) {
-      const size = Math[type](...sizes.filter(n => Number.isFinite(n)));
+      const size = Math[type](
+          ...sizes.map(n => Math.round(n)).filter(n => Number.isFinite(n)));
       if (size) this.maxSize = size;
     }
 
