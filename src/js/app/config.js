@@ -3,7 +3,7 @@
 // TODO Take settings from JSON
 // TODO Some values are changed for test, revert them later
 // Full config
-define(['./utilities'], ({ random }) => {
+define(() => {
   const general = {
     defaultRowsCols: 3, emptyVal: 9,
     size: 420, rows: 5, columns: 5, signsPerRound: 1, winLength: 4,
@@ -11,8 +11,8 @@ define(['./utilities'], ({ random }) => {
   };
 
   const players = [
-    { name: 'Alice', ai: 'none', signID: 'x', color: '#e44' },
-    { name: 'Bob', ai: 'hard', signID: 'o', color: '#35f' },
+    { sign: 0, ai: 'none', color: [238, 68, 68] },
+    { sign: 1, ai: 'hard', color: [51, 85, 255] },
   ];
 
   general.maxLineLength = Math.min(general.rows, general.columns);
@@ -22,44 +22,20 @@ define(['./utilities'], ({ random }) => {
 
   const elements = {
     line: {
-      random: {
-        imgID: [0, 1, 2, 3],
-        move: 10, rotate: 0.08, scale: 0.08,
-      },
-      frames: { inRow: 1, total: 6, delay: 30 },  // delay 36
-      color: '#000',
+      imgID: [[0, 1, 2, 3]],
+      random: { move: 10, rotate: 0.08, scale: 0.08 },
+      frames: { total: 6, inline: 1, delay: 30 },  // delay 36
+      color: [0, 0, 0],
       pause: 120,  // pause 160
     },
     sign: {
-      random: {
-        imgID: { x: [4], o: [5] },
-        move: 8, rotate: 0.12, scale: 0.1,
-      },
-      frames: { inRow: 1, total: 1, delay: 0 },
-      color: '#000',
+      imgID: [[4], [5]],
+      random: { move: 8, rotate: 0.12, scale: 0.1 },
+      frames: { total: 1, inline: 1, delay: 0 },
+      color: [0, 0, 0],
       pause: 200,
     },
   };
-
-  function makeRandomizers(obj) {
-    function remakeObj(property, val) {
-      Object.defineProperty(obj, property, {
-        enumerable: true,
-        get: random.makeRandomizer(val),
-        set: remakeObj.bind(null, property),
-      });
-    }
-    Object.keys(obj).forEach(prop => {
-      if (typeof obj[prop] === 'object' && !Array.isArray(obj[prop])) {
-        makeRandomizers(obj[prop]);
-      } else {
-        remakeObj(prop, obj[prop]);
-      }
-    });
-  }
-
-  makeRandomizers(elements.line.random);
-  makeRandomizers(elements.sign.random);
 
   const assets = {
     images: [

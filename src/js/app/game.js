@@ -24,14 +24,6 @@ define(
       };
       this.userTurn = false;
 
-      images.load(links.images, tryToStartGame);
-      this.state = worker.fromFn({
-        code, amdCfg,
-        onload: tryToStartGame,
-        handler: this.respond.bind(this),
-        href: document.location.href.replace(/[^\/]*$/, ''),
-      });
-
       this.field = new Field();
       this.canvas = html.makeCanvas(
           `triplet-${id}`,
@@ -39,6 +31,17 @@ define(
           cfg.top + cfg.bottom + this.field.height,
           document.getElementsByTagName('body')[0]);
       this.picture = new Picture(this.field, this.canvas);
+
+      images.load(links.images, () => {
+        this.picture.initialize(images.pool);
+        tryToStartGame();
+      });
+      this.state = worker.fromFn({
+        code, amdCfg,
+        onload: tryToStartGame,
+        handler: this.respond.bind(this),
+        href: document.location.href.replace(/[^\/]*$/, ''),
+      });
 
       tryToStartGame();
     }
@@ -71,7 +74,7 @@ define(
       if (result) {
         if (result.success) {
           const { row, col, player } = result.lastMove;
-          this.picture.drawSign(row, col, player);
+          this.picture.drawSign(row, col, player.id);
         }
         if (result.player.isUser) {
           this.userTurn = true;

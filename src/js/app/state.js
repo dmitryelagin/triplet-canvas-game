@@ -104,29 +104,29 @@ define(['./config', './player'], ({
     }
 
     // Find win or tie methods
-    findWin(method = 'map', codes = [this.lastMove.player.id, emptyVal],
-        limits = [Infinity, 0],
+    findWin(method = 'map',
+        codes = [this.lastMove.player.id, emptyVal], limits = [Infinity, 0],
         row = this.lastMove.row, col = this.lastMove.col) {
       const WINS_DIRECTIONS = [[0, 1], [1, 0], [-1, 1], [1, 1]];
       let remain;
 
-      function getInlineCells(dirR, dirC, counter) {
+      const getInlineCells = (dirR, dirC, counter) => {
         const seqRow = row + dirR * counter;
         const seqCol = col + dirC * counter;
         if (this.cellInRange(seqRow, seqCol)) {
           for (let i = 0; i < codes.length; i++) {
             if (this.field[seqRow][seqCol] === codes[i] && remain[i]-- > 0) {
-              return getInlineCells.call(this, dirR, dirC, counter + 1);
+              return getInlineCells(dirR, dirC, counter + 1);
             }
           }
         }
         return counter;
-      }
+      };
 
       return WINS_DIRECTIONS[method](dir => {
         remain = limits.slice();
-        const len0 = getInlineCells.call(this, dir[0], dir[1], 0);
-        const len1 = getInlineCells.call(this, -dir[0], -dir[1], 1) - 1;
+        const len0 = getInlineCells(dir[0], dir[1], 0);
+        const len1 = getInlineCells(-dir[0], -dir[1], 1) - 1;
         return len0 + len1 < winLength ? null : {
           dir, codes, limits, remain, lengths: [len0, len1],
         };

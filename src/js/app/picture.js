@@ -1,88 +1,91 @@
 // TODO Lines length can be corrected via reducing frames.total
 // TODO Refactor sprite config objects
 // TODO All possible sprites should be predefined
-// Visualization constructor
 define(['./config', './utilities', './sprite'], (
-    { general: cfg, elements: { line, sign } }, { random }, Sprite) =>
+    { general: cfg, players, elements: { line, sign } }, { random }, Sprite) =>
+  // Visualization class
   class Picture {
 
     constructor(field, canvas) {
       this.field = field;
       this.canvas = canvas;
       this.context = this.canvas.getContext('2d');
-      this.sprites = [];
+      this.sprites = new Set();
+      this.builders = {};
+    }
+
+    initialize(images) {
+      function makeBuilder(imgIndexes) {
+        const imgs = imgIndexes.map(id => images[id]);
+        imgs[Symbol.iterator] = () => ({
+          next() {
+            return { done: false, value: random.item(imgs) };
+          },
+        });
+        return new Sprite.StandardSpriteBuilder(imgs);
+      }
+
+      function colorize(color, value, index) {
+        return color[index % 4] || value;
+      }
+
+      this.builders.line = line.imgID.map(arr => (
+        makeBuilder(arr)
+            .modify(colorize.bind(null, line.color))
+            .slice(line.frames.total, line.frames.inline)
+            .fit(this.field.width, this.field.height)
+            .translate()
+            .rotate()
+            .scale(1, cfg.defaultRowsCols / Math.max(cfg.rows, cfg.columns),
+                val => random.sign * val + random.error(line.random.scale))));
+
+      this.builders.sign = sign.imgID.map((arr, id) => (
+        makeBuilder(arr)
+            .modify(colorize.bind(null, players[id].color || sign.color))
+            .slice(sign.frames.total, sign.frames.inline)
+            .fit(this.field.cell.width, this.field.cell.height)
+            .translate(undefined, val => val + random.error(sign.random.move))
+            .rotate(0, val => val + random.error(sign.random.rotate))
+            .scale(1, 1,
+                val => random.sign * val + random.error(sign.random.scale))));
     }
 
     drawSprite(sprite) {
-      function clearCanvas() {
+      const clearCanvas = () => {
         this.context.setTransform(1, 0, 0, 1, 0, 0);
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      }
+      };
 
-      function draw(sp) {
+      const draw = sp => {
         this.context.setTransform(1, 0, 0, 1, 0, 0);
-        this.context.translate(sp.center.x, sp.center.y);
-        this.context.rotate(sp.angle);
-        this.context.scale(sp.scale.width, sp.scale.height);
-        this.context.drawImage(
-            sp.image,
-            sp.frames.width * (sp.frames.current % sp.frames.inRow),
-            sp.frames.height * ~~(sp.frames.current / sp.frames.inRow),
-            sp.frames.width,
-            sp.frames.height,
-            sp.dx,
-            sp.dy,
-            sp.width,
-            sp.height);
-      }
+        sp.transformations.forEach((values, transformation) => (
+            this.context[transformation](...values)));
+        this.context.drawImage(...sp.drawArguments);
+      };
 
-      if (!(sprite instanceof Sprite)) {
-        throw new TypeError(`Argument is not a sprite: ${sprite}`);
+      if (sprite instanceof Sprite.Sprite) this.sprites.add(sprite);
+      else throw new TypeError(`Argument is not a sprite: ${sprite}`);
+      const done = sprite.nextFrame();
+      if (!done) {
+        setTimeout(this.drawSprite.bind(this, sprite), 30);  // DELAY!
+        clearCanvas();
+        this.sprites.forEach(draw);
       }
-      if (!~sprite.frames.current) this.sprites.push(sprite);
-      if (sprite.frames.next()) {
-        setTimeout(this.drawSprite.bind(this, sprite), sprite.frames.delay);
-      }
-      clearCanvas.call(this);
-      this.sprites.forEach(draw, this);
     }
 
     drawField(lineID = 0) {
-      const ln = this.field.lines.visible[lineID];
-      if (ln) {
+      if (this.field.lines.visible[lineID]) {
+        const { x, y, angle } = this.field.lines.visible[lineID];
         setTimeout(this.drawField.bind(this, lineID + 1), line.pause);
-        this.drawSprite(new Sprite({
-          imgID: line.random.imgID,
-          color: line.color,
-          frames: line.frames,
-          container: this.field,
-          center: { x: ln.x, y: ln.y },
-          angle: ln.angle,
-          scale: {
-            width: random.sign * 1 + line.random.scale,
-            height: random.sign * cfg.defaultRowsCols /
-                Math.max(cfg.rows, cfg.columns) + line.random.scale,
-          },
-        }));
+        this.drawSprite(
+            this.builders.line[0].translate(x, y).rotate(angle).build());
       }
     }
 
-    drawSign(row, col, player) {
-      const cellCenter = this.field.getCellCenter(row, col);
-      cellCenter.x += sign.random.move;
-      cellCenter.y += sign.random.move;
-      this.drawSprite(new Sprite({
-        imgID: sign.random.imgID[player.signID],
-        color: player.color || sign.color,
-        frames: sign.frames,
-        container: this.field.cell,
-        center: cellCenter,
-        angle: sign.random.rotate,
-        scale: {
-          width: random.sign + sign.random.scale,
-          height: random.sign + sign.random.scale,
-        },
-      }));
+    drawSign(row, col, playerID) {
+      const { x, y } = this.field.getCellCenter(row, col);
+      this.drawSprite(
+          this.builders.sign[playerID].translate(x, y).build());
     }
 
   }

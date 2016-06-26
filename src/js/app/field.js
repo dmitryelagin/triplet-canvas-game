@@ -1,9 +1,9 @@
 // TODO Remove this.canvas if not needed
 // Field constructor
-define(['./config', './line'], ({
+define(['./config', './line', './utilities'], ({
       general: { rows, columns, size, left, right, top, bottom },
       elements: { line },
-    }, Line) =>
+    }, Line, { random }) =>
   class Field {
 
     constructor() {
@@ -19,17 +19,18 @@ define(['./config', './line'], ({
       this.lines = (() => {
         function randomize({ x, y, angle }) {
           return {
-            x: x + line.random.move,
-            y: y + line.random.move,
-            angle: angle + line.random.rotate,
+            x: x + random.error(line.random.move),
+            y: y + random.error(line.random.move),
+            angle: angle + random.error(line.random.rotate),
           };
         }
 
         function linesFactory(count, getLineCfg) {
           const storage = [];
           for (let i = 0; i <= count; i++) {
-            storage.push(new Line(
-                i % count === 0 ? getLineCfg(i) : randomize(getLineCfg(i))));
+            storage.push(new Line(i % count === 0
+              ? getLineCfg(i)
+              : randomize(getLineCfg(i))));
           }
           return storage;
         }

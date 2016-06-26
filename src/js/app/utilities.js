@@ -1,15 +1,6 @@
+// TODO Add function to check ability of modifying image via canvas
 // Support functions
 define({
-
-  props: {
-    fromTo(src, def) {
-      const obj = {};
-      Object.keys(def).forEach(p => {
-        obj[p] = typeof src[p] === typeof def[p] ? src[p] : def[p];
-      });
-      return obj;
-    },
-  },
 
   random: {
     get sign() {
@@ -22,14 +13,6 @@ define({
 
     item(arr) {
       return Array.isArray(arr) ? arr[~~(Math.random() * arr.length)] : null;
-    },
-
-    makeRandomizer(arg) {
-      switch (typeof arg) {
-        case 'undefined': return this.sign;
-        case 'number': return this.error.bind(this, arg);
-        default: return this.item.bind(this, arg);
-      }
     },
   },
 

@@ -1,5 +1,4 @@
-// TODO Correct Sprite class after StandardSpriteBuilder change
-// TODO Rewrite colorizing method
+// TODO Maybe implement opacity change
 // TODO Think about timing saving
 define(() => {
   // Builder interface
@@ -12,19 +11,18 @@ define(() => {
       if (!(builder instanceof SpriteBuilder)) {
         throw new Error(`Can not make sprite without builder: ${builder}`);
       }
-      this.transformations = builder.transformations;
       this.image = builder.image;
       this.slicer = builder.slicer();
-      this.fps = builder.fps;  // ???
       this.dimentions = builder.dimentions;
       this.position = this.dimentions.map(d => -d / 2);
-      this.nextFrame();
+      this.transformations = builder.transformations;
+      this.frame = [];
     }
 
     nextFrame() {
       const frame = this.slicer.next();
       if (!frame.done) this.frame = frame.value;
-      return !frame.done;
+      return frame.done;
     }
 
     get drawArguments() {
@@ -40,6 +38,8 @@ define(() => {
       super();
       this.images = (Array.isArray(images) ? images : [images])
           .filter(img => img instanceof Image);
+      this.images[Symbol.iterator] = images[Symbol.iterator];
+      this.transform = new Map();
       if (!this.images.length) {
         throw new Error(`No images in builder: ${images}`);
       }
@@ -54,32 +54,32 @@ define(() => {
       }
     }
 
-    // FINISHED BEFORE
-
-    // Add colorizing function in arguments and body
-    colorize(color) {
-      const { width, height } = this.image;
+    modify(modifierFn) {
+      const { width, height } = this.images[0];
       const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       canvas.width = width;
       canvas.height = height;
 
-      context.drawImage(this.image, 0, 0);
-      const img = context.getImageData(0, 0, width, height);
-      context.fillStyle = color;
-      context.fillRect(0, 0, width, height);
-      const fill = context.getImageData(0, 0, width, height);
-
-      for (let i = img.data.length; i--;) {
-        if (i % 4 === 3) fill.data[i] = img.data[i];
+      function modifyImg(img) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, width, height).data.map(modifierFn);
+        ctx.putImageData(new ImageData(data, width, height), 0, 0);
+        const nImg = new Image();
+        nImg.src = canvas.toDataURL('image/png');
+        return nImg;
       }
 
-      context.putImageData(fill, 0, 0);
-      const newImage = new Image();
-      newImage.src = canvas.toDataURL('image/png');
-      this.image = newImage;
+      try {
+        this.images = this.images.map(modifyImg);
+      } catch (err) {
+        this.error = err;
+      }
       return this;
     }
+
+    // FINISHED BEFORE
 
     // Unfinished API
     fps(count = 30) {
@@ -93,7 +93,7 @@ define(() => {
       return this.frames || this.images[0];
     }
 
-    slice(total, inline) {
+    slice(total = 1, inline = 1) {
       const width = this.images[0].width / inline;
       const height = this.images[0].height / Math.ceil(total / inline);
       this.frames = { width, height, total, inline };
@@ -115,7 +115,7 @@ define(() => {
     }
 
     set dimentions([type, sizes]) {
-      const size = Math[type](...sizes);
+      const size = Math[type](...sizes.filter(n => Number.isFinite(n)));
       if (size) this.maxSize = size;
     }
 
@@ -130,34 +130,32 @@ define(() => {
     }
 
     get transformations() {
-      const obj = {};
-      Object.entries(this.transform).forEach(([key, value]) => {
-        obj[key] = value.args.map(val => value.decorator(val));
-      });
-      return obj;
+      const map = new Map();
+      this.transform.forEach((value, key) => (
+          map.set(key, value.args.map((val, i) => value.decorate(val, i)))));
+      return map;
     }
 
-    set transformations([type, arg, decorator]) {
-      if (!this.transform) this.transform = {};
-      this.transform[type] = {
-        args: (Array.isArray(arg) ? arg : [arg]).map(v => parseFloat(v) || 0),
-        decorator: typeof decorator === 'function' &&
-            typeof decorator(0) === 'number' ? decorator : val => val,
-      };
+    set transformations([key, arg, dec]) {
+      const args = arg.map(v => parseFloat(v) || 0);
+      let decorate = val => val;
+      if (this.transform.has(key)) decorate = this.transform.get(key).decorate;
+      if (typeof dec === 'function' && Number.isFinite(dec(0))) decorate = dec;
+      this.transform.set(key, { args, decorate });
     }
 
-    translate(args = [0, 0], decorator) {
-      this.transformations = ['translate', args, decorator];
+    translate(x = 0, y = 0, decorate) {
+      this.transformations = ['translate', [x, y], decorate];
       return this;
     }
 
-    scale(args = [1, 1], decorator) {
-      this.transformations = ['scale', args, decorator];
+    scale(width = 1, height = 1, decorate) {
+      this.transformations = ['scale', [width, height], decorate];
       return this;
     }
 
-    rotate(args = [0], decorator) {
-      this.transformations = ['rotate', args, decorator];
+    rotate(angle = 0, decorate) {
+      this.transformations = ['rotate', [angle], decorate];
       return this;
     }
 
