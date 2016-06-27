@@ -1,6 +1,5 @@
 // TODO Lines length can be corrected via reducing frames.total
-// TODO Refactor sprite config objects
-// TODO All possible sprites should be predefined
+// TODO Maybe use singleton and check if instance is initialized
 // TODO Functions in initialize method are ugly, maybe refactor them
 define(['./config', './utilities', './sprite'], (
     { general: cfg, players, elements: { line, sign } }, { random }, Sprite) =>

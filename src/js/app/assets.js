@@ -18,8 +18,8 @@ define(() => {
       return new Promise((resolve, reject) => {
         Promise.all(links.map(loadAsset, this)).then(results => {
           results.forEach(val => this.pool.push(val));
-          if (this.pool.some(e => e instanceof Error)) resolve(this.pool);
-          else reject(this.pool);
+          if (this.pool.some(e => e instanceof Error)) reject(this.pool);
+          else resolve(this.pool);
         });
       });
     }
