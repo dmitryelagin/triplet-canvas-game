@@ -31,10 +31,17 @@ define(
           document.getElementsByTagName('body')[0]);
       this.picture = new Picture(this.field, this.canvas);
 
-      images.load(links.images).then(() => {
-        this.picture.initialize(images.pool);
-        startGame();
-      });
+      images.load(links.images)
+          .then(() => this.picture.initialize(images.pool))
+          .catch(() => {
+            try {
+              this.picture.initialize(images.pool);
+            } catch (e) {
+              throw new Error(`Too many sprites are missed: ${images.pool}`);
+            }
+          })
+          .then(() => startGame());
+
       this.state = worker.fromFn({
         code, amdCfg,
         onload: startGame,

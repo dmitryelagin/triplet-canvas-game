@@ -18,11 +18,14 @@ define(['./config', './utilities', './sprite'], (
     initialize(images) {
       function makeBuilder(imgIndexes) {
         const imgs = imgIndexes.map(id => images[id]);
-        imgs[Symbol.iterator] = () => ({
-          next() {
-            return { done: false, value: random.item(imgs) };
-          },
-        });
+        imgs[Symbol.iterator] = function iterate() {
+          const self = this;
+          return {
+            next() {
+              return { done: false, value: random.item(self) };
+            },
+          };
+        };
         return new Sprite.StandardSpriteBuilder(imgs);
       }
 
