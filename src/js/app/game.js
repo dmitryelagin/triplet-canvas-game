@@ -4,7 +4,6 @@
 // TODO Ask user to make turn without console
 // TODO Add some idle time for drawning field
 // TODO Maybe Field and Canvas should not be made here
-// TODO Maybe partsToLoad should be dynamic or private number
 // TODO Many string values should be in config
 // TODO Add end game functionality
 // Game main presenter
@@ -15,9 +14,9 @@ define(
   class Game {
 
     constructor(id = 0, amdCfg) {
-      let partsToLoad = 3;
-      const tryToStartGame = () => {
-        if (--partsToLoad) return;
+      let waitLoad = this.constructor.toString().match(/startGame/g).length - 2;
+      const startGame = () => {
+        if (--waitLoad) return;
         this.picture.drawField();
         this.canvas.addEventListener('click', this.onClick.bind(this));
         this.action();
@@ -32,18 +31,18 @@ define(
           document.getElementsByTagName('body')[0]);
       this.picture = new Picture(this.field, this.canvas);
 
-      images.load(links.images, () => {
+      images.load(links.images).then(() => {
         this.picture.initialize(images.pool);
-        tryToStartGame();
+        startGame();
       });
       this.state = worker.fromFn({
         code, amdCfg,
-        onload: tryToStartGame,
+        onload: startGame,
         handler: this.respond.bind(this),
         href: document.location.href.replace(/[^\/]*$/, ''),
       });
 
-      tryToStartGame();
+      startGame();
     }
 
     onClick(e) {

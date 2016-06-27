@@ -1,4 +1,5 @@
-// TODO Add function to check ability of modifying image via canvas
+// TODO Maybe add function to check ability of modifying image via canvas
+// TODO Worker should return promise
 // Support functions
 define({
 

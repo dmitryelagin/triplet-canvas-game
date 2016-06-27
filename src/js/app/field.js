@@ -1,4 +1,5 @@
 // TODO Remove this.canvas if not needed
+// TODO Maybe apply singleton and decorator patterns
 // Field constructor
 define(['./config', './line', './utilities'], ({
       general: { rows, columns, size, left, right, top, bottom },

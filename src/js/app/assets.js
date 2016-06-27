@@ -1,34 +1,38 @@
-// TODO Add attempt to retry asset downloading on error
 // TODO Check arguments and think of exeptions
+// TODO Load method is ugly, refactor it
 // Game assets storage
 class Storage {
 
   constructor(loader) {
     this.loader = loader;
-    this.finished = 0;
     this.pool = [];
-    this.errors = [];
   }
 
-  load(loadList, callback) {
-    function onEnd(save, value) {
-      save(value);
-      if (++this.finished >= loadList.length) callback();
-    }
-    loadList.forEach((link, index) => {
-      const onLoad = asset => { this.pool[index] = asset; };
-      const onError = info => { this.errors[index] = info; };
-      this.loader(link, onEnd.bind(this, onLoad), onEnd.bind(this, onError));
+  load(loadList, retries = 2) {
+    return new Promise((resolve, reject) => {
+      loadList.forEach((url, index) => {
+        (function loadAsset(attempts) {
+          this.loader(url).then(asset => {
+            if (this.pool.push([index, asset]) === loadList.length) {
+              this.pool = this.pool.sort((a, b) => a[0] - b[0]).map(v => v[1]);
+              resolve(this.pool);
+            }
+          }, error => {
+            if (attempts) loadAsset.call(this, attempts - 1);
+            else reject(error);
+          });
+        }.call(this, retries));
+      });
     });
   }
 
 }
 
 define({
-  images: new Storage((link, onSuccess, onFail) => {
+  images: new Storage(url => new Promise((resolve, reject) => {
     const img = new Image();
-    img.src = link;
-    img.onload = () => { onSuccess(img); };
-    img.onerror = () => { onFail(link); };
-  }),
+    img.onload = () => { resolve(img); };
+    img.onerror = () => { reject(url); };
+    img.src = url;
+  })),
 });
