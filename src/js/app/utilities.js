@@ -31,7 +31,7 @@ define({
             if (isFn(handler)) wrkr.onmessage = handler;
             if (isFn(onload)) onload(wrkr, e.data.args);
           } else {
-            throw new Error(`Worker can not be initialized: ${e.data.error}`);
+            throw new Error(`Worker initialize error: ${e.data.errorMessage}`);
           }
         };
         wrkr.postMessage({ href, amdCfg });

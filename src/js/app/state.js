@@ -46,15 +46,11 @@ define(['./config', './player'], ({
     get spiralOrder() {
       const ORDER_SPIRAL_N_CCW = [[1, 0], [0, -1], [-1, 0], [0, 1]];
       const result = [];
-      let vector;
       let [row, col] = [~~(rows / 2), ~~(columns / 2)];
-      let [turns, straight, beforeTurn, searched] = [0, 0, 0, 0];
-      while (searched < maxTurns) {
-        if (this.cellInRange(row, col)) {
-          result.push([row, col]);
-          searched++;
-        }
-        vector = turns % 4;
+      let [turns, straight, beforeTurn] = [0, 0, 0];
+      while (result.length < maxTurns) {
+        if (this.cellInRange(row, col)) result.push([row, col]);
+        const vector = turns % 4;
         row += ORDER_SPIRAL_N_CCW[vector][0];
         col += ORDER_SPIRAL_N_CCW[vector][1];
         if (beforeTurn-- === 0) {

@@ -39,7 +39,7 @@ define(() =>
             self.postMessage({ init: true });
           });
         } catch (err) {
-          self.postMessage({ init: false, error: err.message });
+          self.postMessage({ init: false, errorMessage: err.message });
         }
       };
     })();
