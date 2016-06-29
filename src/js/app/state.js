@@ -1,6 +1,7 @@
-// TODO Try to add depth for only win search
+// TODO Try to add depth to minimax for only win search
 // TODO Refactor findWin, it is ugly
 // TODO Ucomment exponentiation operator later
+// TODO Implement Monte-Carlo tree search algorythm
 // Game state class
 define(['./config', './player'], ({
     general: {

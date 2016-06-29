@@ -1,5 +1,4 @@
 // TODO Maybe add function to check ability of modifying image via canvas
-// TODO Worker should return promise
 // Support functions
 define({
 
@@ -18,26 +17,22 @@ define({
   },
 
   worker: {
-    fromFn({ code, handler, onload, href, amdCfg }) {
-      const isFn = fn => typeof fn === 'function';
-      if (isFn(code)) {
-        const url = URL.createObjectURL(new Blob(
-            [code.toString().replace(/^.*?{\s*|\s*}.*$/g, '')],
-            { type: 'javascript/worker' }));
+    fromFn({ code, handler, href, args }) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(
+            new Blob([code.toString().replace(/^.*?{\s*|\s*}.*$/g, '')]));
         const wrkr = new Worker(url);
         URL.revokeObjectURL(url);
         wrkr.onmessage = e => {
-          if (e.data.init) {
-            if (isFn(handler)) wrkr.onmessage = handler;
-            if (isFn(onload)) onload(wrkr, e.data.args);
+          if (e.data.init && typeof handler === 'function') {
+            wrkr.onmessage = handler;
+            resolve(wrkr);
           } else {
-            throw new Error(`Worker initialize error: ${e.data.errorMessage}`);
+            reject(e.data.errorMessage || 'Handler must be a function.');
           }
         };
-        wrkr.postMessage({ href, amdCfg });
-        return wrkr;
-      }
-      return null;
+        wrkr.postMessage({ href, args });
+      });
     },
   },
 

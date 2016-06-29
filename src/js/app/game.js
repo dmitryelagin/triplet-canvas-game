@@ -6,6 +6,7 @@
 // TODO Maybe Field and Canvas should not be made here
 // TODO Many string values should be in config
 // TODO Add end game functionality
+// TODO Maybe userTurn flag is not needed
 // Game main presenter
 define(
     ['./config', './assets', './utilities', './worker', './field', './picture'],
@@ -42,11 +43,14 @@ define(
           })
           .then(() => startGame());
 
-      this.state = worker.fromFn({
-        code, amdCfg,
-        onload: startGame,
+      worker.fromFn({
+        code,
+        args: amdCfg,
         handler: this.respond.bind(this),
         href: document.location.href.replace(/[^\/]*$/, ''),
+      }).then(wrkr => {
+        this.state = wrkr;
+        startGame();
       });
 
       startGame();
@@ -82,14 +86,15 @@ define(
           const { row, col, player } = result.lastMove;
           this.picture.drawSign(row, col, player.id);
         }
-        if (result.player.isUser) {
+        if (result.terminate) {
+          this.state.terminate();
+          console.log('Game ended.');
+        } else if (result.player.isUser) {
           this.userTurn = true;
           console.log('User turn.');
-        } else if (result.aiMove !== null) {
-          this.state.postMessage({ ai: true });
         } else {
-          this.state.terminate();
-          throw new Error('Worker failed and was terminated. Restart app.');
+          this.state.postMessage({ ai: true });
+          console.log('AI turn.');
         }
       } else {
         this.state.postMessage(0);

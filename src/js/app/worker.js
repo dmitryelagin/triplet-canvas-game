@@ -16,7 +16,7 @@ define(() =>
           reply.tie = state.isTie;
           reply.terminate = reply.tie || reply.wins.some(val => val);
         }
-        if (e.data.ai) reply.aiMove = rand.item(state.nextBestMoves) || null;
+        if (e.data.ai) reply.aiMove = rand.item(state.nextBestMoves);
         reply.player = state.currentPlayer;
         reply.aiSpeed = Date.now() - aiStartTime;
         self.postMessage(reply);
@@ -30,9 +30,9 @@ define(() =>
 
       return function init(e) {
         try {
-          const baseUrl = e.data.href + e.data.amdCfg.baseUrl;
+          const baseUrl = e.data.href + e.data.args.baseUrl;
           self.importScripts(`${baseUrl}/require.js`);
-          require.config(Object.assign({}, e.data.amdCfg, { baseUrl }));
+          require.config(Object.assign({}, e.data.args, { baseUrl }));
           require(['app/utilities', 'app/state'], (...args) => {
             assignGlobals(...args);
             self.onmessage = handleMessage;
