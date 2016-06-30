@@ -54,7 +54,7 @@ define(() => {
       }
     }
 
-    modify(modifierFn, makeCanvas = () => document.create('canvas')) {
+    modify(modifierFn, makeCanvas = () => document.createElement('canvas')) {
       const { width, height } = this.images[0];
       const canvas = makeCanvas();
       const ctx = canvas.getContext('2d');
