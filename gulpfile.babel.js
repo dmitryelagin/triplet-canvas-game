@@ -10,7 +10,10 @@ gulp.task('build', () => gulp.src(`${dir.src}/**/*.*`)
     .pipe(gulpIf(f => f.extname.match(/(?:js|css)/), sourcemaps.init()))
     .pipe(gulpIf(f => f.dirname.match(`(${dir.app}|${dir.main})$`), babel({
       presets: ['es2015'],
-      plugins: ['transform-exponentiation-operator'],
+      plugins: [
+        'transform-regenerator',
+        'transform-exponentiation-operator',
+      ],
     })))
     .pipe(sourcemaps.write())
     .pipe(gulp.dest(dir.dest)));

@@ -3,7 +3,7 @@ const requireCfg = {
   baseUrl: 'js/lib',
   paths: { app: '../app' },
 };
-requirejs(requireCfg, ['jquery', 'app/game'], ($, Game) => {
+require(requireCfg, ['jquery', 'app/game'], ($, Game) => {
   const games = [];
   games.unshift(new Game(games.length, requireCfg));
 });
