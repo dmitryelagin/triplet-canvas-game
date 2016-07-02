@@ -1,4 +1,5 @@
 // TODO Add multi-game feature
+// TODO Babel Polyfill library is not needed in source
 const requireCfg = {
   baseUrl: 'js/lib',
   paths: { app: '../app' },
