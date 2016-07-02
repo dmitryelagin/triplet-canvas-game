@@ -16,14 +16,15 @@ define(
 
     constructor(id = 0, amdCfg) {
       let waitLoad = this.constructor.toString().match(/startGame/g).length - 2;
-      const startGame = () => {
+      // Not an arrow function because of possible compilation errors
+      function startGame() {
         if (--waitLoad) return;
         this.picture.drawField();
         this.canvas.addEventListener('click', this.onClick.bind(this));
         this.action();
-      };
-      this.userTurn = false;
+      }
 
+      this.userTurn = false;
       this.field = new Field();
       this.canvas = html.makeCanvas(
           `triplet-${id}`,
@@ -32,16 +33,13 @@ define(
           document.getElementsByTagName('body')[0]);
       this.picture = new Picture(this.field, this.canvas);
 
+      const tryInitSprites = () => this.picture.initialize(images.pool);
       images.load(links.images)
-          .then(() => this.picture.initialize(images.pool))
+          .then(tryInitSprites, tryInitSprites)
+          .then(() => startGame.call(this))
           .catch(() => {
-            try {
-              this.picture.initialize(images.pool);
-            } catch (e) {
-              throw new Error(`Too many sprites are missed: ${images.pool}`);
-            }
-          })
-          .then(() => startGame());
+            throw new Error(`Many sprites are missed: ${images.pool}`);
+          });
 
       worker.fromFn({
         code,
@@ -50,7 +48,7 @@ define(
         href: document.location.href.replace(/[^\/]*$/, ''),
       }).then(wrkr => {
         this.state = wrkr;
-        startGame();
+        startGame.call(this);
       });
 
       startGame();

@@ -1,23 +1,40 @@
 import gulp from 'gulp';
 import sourcemaps from 'gulp-sourcemaps';
 import babel from 'gulp-babel';
-import gulpIf from 'gulp-if';
+import replace from 'gulp-replace';
+import inject from 'gulp-inject-string';
 import del from 'del';
 
-const dir = { src: 'src', dest: 'build', app: 'app', main: 'js' };
+const dir = { base: 'src', dest: 'build', app: 'app', main: 'js' };
 
-gulp.task('build', () => gulp.src(`${dir.src}/**/*.*`)
-    .pipe(gulpIf(f => f.extname.match(/(?:js|css)/), sourcemaps.init()))
-    .pipe(gulpIf(f => f.dirname.match(`(${dir.app}|${dir.main})$`), babel({
-      presets: ['es2015'],
-      plugins: [
-        'transform-regenerator',
-        'transform-exponentiation-operator',
-      ],
-    })))
-    .pipe(sourcemaps.write())
-    .pipe(gulp.dest(dir.dest)));
+gulp.task('buildPages', () => (
+  gulp.src(`${dir.base}/**/*.html`)
+      .pipe(sourcemaps.init())
+      .pipe(inject.before(
+          '<script', '<script src="js/lib/polyfill.js"></script>\n'))
+      .pipe(sourcemaps.write())
+      .pipe(gulp.dest(dir.dest))));
 
-gulp.task('clear', () => del(dir.dest));
+gulp.task('buildScripts', () => (
+  gulp.src([`${dir.base}/**/${dir.main}/*.js`,
+            `${dir.base}/**/${dir.main}/${dir.app}/*.js`])
+      .pipe(sourcemaps.init())
+      .pipe(replace(/(importScripts\()/, '$1`${baseUrl}/polyfill.js`,'))
+      .pipe(babel({
+        presets: ['es2015'],
+        plugins: [
+          'transform-regenerator',
+          'transform-exponentiation-operator',
+        ],
+      }))
+      .pipe(sourcemaps.write())
+      .pipe(gulp.dest(dir.dest))));
 
-gulp.task('default', gulp.series('clear', 'build'));
+gulp.task('copyAll', () => (
+  gulp.src(`${dir.base}/**/*.*`)
+      .pipe(gulp.dest(dir.dest))));
+
+gulp.task('clearAll', () => del(dir.dest));
+
+gulp.task('default',
+    gulp.series('clearAll', 'copyAll', 'buildPages', 'buildScripts'));
