@@ -7,24 +7,16 @@
 // TODO Many string values should be in config
 // TODO Add end game functionality
 // TODO Maybe userTurn flag is not needed
-// Game main presenter
 define(
     ['./config', './assets', './utilities', './worker', './field', './picture'],
     ({ general: cfg, assets: links }, { images }, { worker, html }, code,
         Field, Picture) =>
+  // Game main presenter
   class Game {
 
     constructor(id = 0, amdCfg) {
-      let waitLoad = this.constructor.toString().match(/startGame/g).length - 2;
-      // Not an arrow function because of possible compilation errors
-      function startGame() {
-        if (--waitLoad) return;
-        this.picture.drawField();
-        this.canvas.addEventListener('click', this.onClick.bind(this));
-        this.action();
-      }
-
       this.userTurn = false;
+
       this.field = new Field();
       this.canvas = html.makeCanvas(
           `triplet-${id}`,
@@ -33,25 +25,27 @@ define(
           document.getElementsByTagName('body')[0]);
       this.picture = new Picture(this.field, this.canvas);
 
+      const loaded = [];
       const tryInitSprites = () => this.picture.initialize(images.pool);
-      images.load(links.images)
+
+      loaded.push(images.load(links.images)
           .then(tryInitSprites, tryInitSprites)
-          .then(() => startGame.call(this))
           .catch(() => {
             throw new Error(`Many sprites are missed: ${images.pool}`);
-          });
+          }));
 
-      worker.fromFn({
+      loaded.push(worker.fromFn({
         code,
         args: amdCfg,
         handler: this.respond.bind(this),
         href: document.location.href.replace(/[^\/]*$/, ''),
-      }).then(wrkr => {
-        this.state = wrkr;
-        startGame.call(this);
-      });
+      }).then(wrkr => { this.state = wrkr; }));
 
-      startGame();
+      Promise.all(loaded).then(() => {
+        this.picture.drawField();
+        this.canvas.addEventListener('click', this.onClick.bind(this));
+        this.action();
+      });
     }
 
     onClick(e) {
