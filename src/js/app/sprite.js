@@ -40,6 +40,7 @@ define(() => {
           .filter(img => img instanceof Image);
       this.images[Symbol.iterator] = images[Symbol.iterator];
       this.transform = new Map();
+      this.modified = [];
       if (!this.images.length) {
         throw new Error(`No images in builder: ${images}`);
       }
@@ -54,7 +55,7 @@ define(() => {
       }
     }
 
-    modify(modifierFn, makeCanvas = () => document.createElement('canvas')) {
+    modify(modifier, makeCanvas = () => document.createElement('canvas')) {
       const { width, height } = this.images[0];
       const canvas = makeCanvas();
       const ctx = canvas.getContext('2d');
@@ -62,20 +63,21 @@ define(() => {
       canvas.height = height;
 
       function modifyImg(img) {
-        ctx.clearRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0);
-        const data = ctx.getImageData(0, 0, width, height).data.map(modifierFn);
-        ctx.putImageData(new ImageData(data, width, height), 0, 0);
-        const nImg = new Image();
-        nImg.src = canvas.toDataURL('image/png');
-        return nImg;
+        return new Promise(resolve => {
+          ctx.clearRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0);
+          const data = ctx.getImageData(0, 0, width, height).data.map(modifier);
+          ctx.putImageData(new ImageData(data, width, height), 0, 0);
+          const nImg = new Image();
+          nImg.onload = () => { resolve(nImg); };
+          nImg.src = canvas.toDataURL();
+        });
       }
 
-      try {
-        this.images = this.images.map(modifyImg);
-      } catch (err) {
-        this.error = err;
-      }
+      Promise.all(this.images.map(modifyImg))
+          .then(results => { this.images = results; })
+          .catch(error => { this.error = error; })
+          .then(() => this.modified.push(modifier));
       return this;
     }
 
